@@ -7,6 +7,7 @@
 
 import UIKit
 import Alamofire
+import Kingfisher
 import SnapKit
 
 class SearchResultViewController: UIViewController {
@@ -24,7 +25,7 @@ class SearchResultViewController: UIViewController {
     }()
     
     var nvtitle = ""
-    var resultCount = "222,222,222개의 검색결과"
+    var resultCount = ""
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,12 +40,14 @@ class SearchResultViewController: UIViewController {
         configHierarchy()
         configLayout()
         configView()
+        
+        callRequest()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        callRequest()
+//        callRequest()
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -72,7 +75,10 @@ class SearchResultViewController: UIViewController {
             
             switch response.result {
             case .success(let value):
-                dump(value)
+                self.resultCountLabel.text = String(value.total.formatted()) + "개의 검색결과"
+                list = value.items
+                
+                self.collectionView.reloadData()
             case .failure(let error):
                 print(error)
         }
@@ -83,16 +89,25 @@ class SearchResultViewController: UIViewController {
 
 // MARK: - collectionView 설정
 extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 100
+        return list.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
+        let currentArray = list[indexPath.row]
+        
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchResultCollectionViewCell.id, for: indexPath) as? SearchResultCollectionViewCell else { return UICollectionViewCell() }
         
-        cell.thumnailImageView.image = UIImage(named: "zzamong")
+        let url = currentArray.image
+        guard let intPrice = Int(currentArray.price)?.formatted() else { return UICollectionViewCell() }
+        
+        cell.thumnailImageView.kf.setImage(with: URL(string: url))
         cell.thumnailImageView.contentMode = .scaleAspectFill
+        cell.mallNameLabel.text = currentArray.mallName
+        cell.titleLabel.text = currentArray.title
+        cell.priceLabel.text = String(intPrice)
         
         return cell
     }

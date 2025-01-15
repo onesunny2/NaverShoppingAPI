@@ -25,3 +25,5 @@ struct ShoppingDetail: Decodable {
         case mallName
     }
 }
+
+var list: [ShoppingDetail] = []
