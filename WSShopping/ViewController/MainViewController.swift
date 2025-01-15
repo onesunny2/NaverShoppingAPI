@@ -18,6 +18,9 @@ class MainViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        view.addGestureRecognizer(tap)
 
         configHierarchy()
         configLayout()
@@ -27,7 +30,12 @@ class MainViewController: UIViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
-        searchbar.text = "" 
+        searchbar.text = ""
+    }
+    
+    @objc
+    func dismissKeyboard() {
+        view.endEditing(true)
     }
 
 }
