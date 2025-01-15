@@ -59,7 +59,7 @@ extension SearchResultCollectionViewCell {
         contentView.addSubview(priceLabel)
         
         mallNameLabel.snp.makeConstraints {
-            $0.top.equalTo(thumnailImageView.snp.bottom).offset(2)
+            $0.top.equalTo(thumnailImageView.snp.bottom).offset(3)
             $0.horizontalEdges.equalTo(safeAreaLayoutGuide).inset(8)
         }
         

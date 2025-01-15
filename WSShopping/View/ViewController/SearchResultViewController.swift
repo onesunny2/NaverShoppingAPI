@@ -102,8 +102,11 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
         
         let url = currentArray.image
         guard let intPrice = Int(currentArray.price)?.formatted() else { return UICollectionViewCell() }
-        
-        cell.thumnailImageView.kf.setImage(with: URL(string: url))
+        let processor = DownsamplingImageProcessor(size: CGSize(width: cell.thumnailImageView.frame.width, height: cell.thumnailImageView.frame.height))
+        cell.thumnailImageView.kf.setImage(with: URL(string: url),
+                                           options: [.processor(processor),
+                                                     .scaleFactor(UIScreen.main.scale),
+                                                     .cacheOriginalImage])
         cell.thumnailImageView.contentMode = .scaleAspectFill
         cell.mallNameLabel.text = currentArray.mallName
         cell.titleLabel.text = currentArray.title
