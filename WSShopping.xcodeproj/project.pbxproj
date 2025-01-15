@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4350E1502D37947F00670D84 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 4350E14F2D37947F00670D84 /* .gitignore */; };
+		4350E1652D379A6600670D84 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4350E1642D379A6600670D84 /* SnapKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4350E1652D379A6600670D84 /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +86,7 @@
 			);
 			name = WSShopping;
 			packageProductDependencies = (
+				4350E1642D379A6600670D84 /* SnapKit */,
 			);
 			productName = WSShopping;
 			productReference = 4350E1372D3793F800670D84 /* WSShopping.app */;
@@ -113,6 +116,9 @@
 			);
 			mainGroup = 4350E12E2D3793F800670D84;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4350E1632D379A6600670D84 /* XCRemoteSwiftPackageReference "SnapKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4350E1382D3793F800670D84 /* Products */;
 			projectDirPath = "";
@@ -352,6 +358,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4350E1632D379A6600670D84 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4350E1642D379A6600670D84 /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4350E1632D379A6600670D84 /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4350E12F2D3793F800670D84 /* Project object */;
 }
