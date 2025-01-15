@@ -8,13 +8,13 @@
 import UIKit
 import SnapKit
 
-class MainViewController: UIViewController, UISearchBarDelegate {
+class MainViewController: UIViewController {
     
     let searchbar = UISearchBar()
     let defaultImage = UIImageView()
     let defaultLabel = UILabel()
     
-    let homecontent = HomeContent(isValid: true)
+    var homecontent = HomeContent(isValid: true)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +26,29 @@ class MainViewController: UIViewController, UISearchBarDelegate {
 
 }
 
+// MARK: - 서치바 관련 액션
+extension MainViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        guard let keyword = searchBar.text else { return }
+        
+        switch keyword.count {
+        case 0..<2:
+            homecontent.isValid = false
+            defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
+            defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
+        case 2...:
+            // 화면 전환 시키기 & keyword 다음으로 전달
+            navigationController?.pushViewController(SearchResultViewController(), animated: true)
+        default:
+            break
+        }
+    }
+}
+
+
+// MARK: - 레이아웃 및 속성 설정
 extension MainViewController: ShoppingConfigure {
     func configHierarchy() {
         searchbar.delegate = self
