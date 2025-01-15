@@ -13,6 +13,8 @@ class MainViewController: UIViewController, UISearchBarDelegate {
     let searchbar = UISearchBar()
     let defaultImage = UIImageView()
     let defaultLabel = UILabel()
+    
+    let homecontent = HomeContent(isValid: true)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,22 +49,22 @@ extension MainViewController: ShoppingConfigure {
         
         defaultLabel.snp.makeConstraints {
             $0.centerX.equalTo(defaultImage)
-            $0.top.equalTo(defaultImage.snp.bottom).offset(-20)
+            $0.top.equalTo(defaultImage.snp.bottom).offset(homecontent.isValid ? -20 : -60)
             $0.width.equalTo(300)
         }
     }
     
     func configView() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = "원선's 쇼핑치링치링"
+        navigationItem.title = HomeContent.title
         
         searchbar.searchBarStyle = .minimal
-        searchbar.placeholder = "브랜드, 상품, 프로필, 태그 등"
+        searchbar.placeholder = HomeContent.placeholder
         
-        defaultImage.image = UIImage(named: "shopping")
+        defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
         defaultImage.contentMode = .scaleAspectFit
         
-        defaultLabel.text = "이것도 사고 저것도 살래 :>"
+        defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
         defaultLabel.textColor = .label
         defaultLabel.font = .systemFont(ofSize: 15, weight: .semibold)
         defaultLabel.textAlignment = .center
