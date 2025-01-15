@@ -31,12 +31,17 @@ class MainViewController: UIViewController {
         super.viewDidDisappear(animated)
         
         searchbar.text = ""
+        
+        homecontent.isValid = true
+        defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
+        defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
     }
     
     @objc
     func dismissKeyboard() {
         view.endEditing(true)
     }
+    
 
 }
 
