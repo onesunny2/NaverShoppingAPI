@@ -35,12 +35,16 @@ class SearchResultViewController: UIViewController {
         for index in 0...3 {
             filteringButtons.append(StrokeButton(title: title[index], isTapped: isTapped[index]))
         }
-        
-        print(filteringButtons.description)
 
         configHierarchy()
         configLayout()
         configView()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        callRequest()
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -55,6 +59,24 @@ class SearchResultViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 8, left: sectionInsect, bottom: 8, right: sectionInsect)
         
         return layout
+    }
+    
+    func callRequest() {
+        
+        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=100"
+        let headers = HTTPHeaders(["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret])
+        
+        AF.request(url, method: .get, headers: headers).responseDecodable(of: Shopping.self) { response in
+            
+            print(response.response?.statusCode)
+            
+            switch response.result {
+            case .success(let value):
+                dump(value)
+            case .failure(let error):
+                print(error)
+        }
+        }
     }
 
 }
