@@ -46,7 +46,7 @@ class SearchResultViewController: UIViewController {
     func collectionViewLayout() -> UICollectionViewFlowLayout {
         
         let sectionInsect: CGFloat = 10
-        let cellSpacing: CGFloat = 10
+        let cellSpacing: CGFloat = 15
         let cellWidth: CGFloat = (UIScreen.main.bounds.width - (sectionInsect * 2 + cellSpacing)) / 2
         
         let layout = UICollectionViewFlowLayout()
