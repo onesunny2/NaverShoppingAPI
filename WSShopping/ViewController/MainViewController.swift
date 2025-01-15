@@ -59,7 +59,9 @@ extension MainViewController: UISearchBarDelegate {
             defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
         case 2...:
             // 화면 전환 시키기 & keyword 다음으로 전달
-            navigationController?.pushViewController(SearchResultViewController(), animated: true)
+            let vc = SearchResultViewController()
+            navigationController?.pushViewController(vc, animated: true)
+            vc.nvtitle = keyword
         default:
             break
         }
@@ -100,6 +102,8 @@ extension MainViewController: ShoppingConfigure {
     
     func configView() {
         view.backgroundColor = .systemBackground
+        navigationItem.backButtonTitle = ""
+        navigationController?.navigationBar.tintColor = .label
         navigationItem.title = HomeContent.title
         
         searchbar.searchBarStyle = .minimal
