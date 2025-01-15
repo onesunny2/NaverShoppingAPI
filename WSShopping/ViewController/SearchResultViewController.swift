@@ -18,6 +18,7 @@ class SearchResultViewController: UIViewController {
         let stackview = UIStackView()
         stackview.axis = .horizontal
         stackview.distribution = .equalSpacing
+        stackview.alignment = .leading
         
         return stackview
     }()
@@ -26,7 +27,15 @@ class SearchResultViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        let title = StrokeButton.titleList
+        let isTapped = [true, false, false, false]
+        
+        for index in 0...3 {
+            filteringButtons.append(StrokeButton(title: title[index], isTapped: isTapped[index]))
+        }
+        
+        print(filteringButtons.description)
 
         configHierarchy()
         configLayout()
@@ -55,10 +64,10 @@ extension SearchResultViewController: ShoppingConfigure {
 //        collectionView.dataSource = self
         
         view.addSubview(resultCountLabel)
-//        view.addSubview(filterStackview)
-        /* for index in 0...3 {
+        view.addSubview(filterStackview)
+        for index in 0...3 {
             filterStackview.addArrangedSubview(filteringButtons[index])
-        } */
+        }
 //        view.addSubview(collectionView)
     }
     
@@ -66,6 +75,13 @@ extension SearchResultViewController: ShoppingConfigure {
         resultCountLabel.snp.makeConstraints {
             $0.top.leading.equalTo(view.safeAreaLayoutGuide).inset(10)
             $0.width.equalTo(UIScreen.main.bounds.size.width - 30)
+        }
+        
+        filterStackview.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).inset(40)
+            $0.leading.equalTo(view.safeAreaLayoutGuide).inset(10)
+            $0.width.equalTo(UIScreen.main.bounds.size.width * 0.85)
+            $0.height.equalTo(35)
         }
     }
     
