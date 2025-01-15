@@ -23,6 +23,12 @@ class MainViewController: UIViewController {
         configLayout()
         configView()
     }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        searchbar.text = "" 
+    }
 
 }
 
@@ -44,6 +50,8 @@ extension MainViewController: UISearchBarDelegate {
         default:
             break
         }
+        
+        view.endEditing(true)
     }
 }
 
