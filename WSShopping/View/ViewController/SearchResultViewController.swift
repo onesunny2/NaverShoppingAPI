@@ -12,7 +12,7 @@ import SnapKit
 
 class SearchResultViewController: UIViewController {
     
-    lazy var resultCountLabel = ResultLabel(title: resultCount, size: 15, weight: .bold, color: .systemGreen)
+    lazy var resultCountLabel = ResultLabel(title: "", size: 15, weight: .bold, color: .systemGreen)
     var filteringButtons: [UIButton] = []
     lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout())
     lazy var filterStackview = {
@@ -24,17 +24,31 @@ class SearchResultViewController: UIViewController {
         return stackview
     }()
     
-    var nvtitle = ""
-    var resultCount = ""
+    var start = 1
+    var keyword = ""
+    var sortName = "sim"
+    var total = 0
+    var isEnd = false
+    var list: [ShoppingDetail] = [] {
+        didSet {
+            self.collectionView.reloadData()
+        }
+    }
+    
+    let buttonTitle = StrokeButton.titleList
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let title = StrokeButton.titleList
-        let isTapped = [true, false, false, false]
-        
         for index in 0...3 {
-            filteringButtons.append(StrokeButton(title: title[index], isTapped: isTapped[index]))
+
+            if index == 0 {
+                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: true))
+            } else {
+                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: false))
+            }
+            
             filteringButtons[index].tag = index
         }
 
@@ -42,7 +56,8 @@ class SearchResultViewController: UIViewController {
         configLayout()
         configView()
         
-        callRequest(filter: "sim")
+        callRequest()
+
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -59,72 +74,77 @@ class SearchResultViewController: UIViewController {
         return layout
     }
     
-    func callRequest(filter: String) {
+    func callRequest() {
         
-        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=100&sort=\(filter)"
-        let headers = HTTPHeaders(["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret])
+        AlamofireManager.shared.getShoppingResult(keyword: keyword, sortName: sortName, start: start) { value in
+
+            if self.start == 1 {
+                self.total = value.total
+                self.resultCountLabel.text = String(self.total.formatted()) + "개의 검색결과"
+                self.list = value.items
+            } else {
+                self.list.append(contentsOf: value.items)
+            }
+        }
         
-        AF.request(url, method: .get, headers: headers).responseDecodable(of: Shopping.self) { response in
-            
-            print(response.response?.statusCode)
-            
-            switch response.result {
-            case .success(let value):
-                self.resultCountLabel.text = String(value.total.formatted()) + "개의 검색결과"
-                list = value.items
-                
-                self.collectionView.reloadData()
-            case .failure(let error):
-                print(error)
-        }
-        }
     }
     
     @objc
     func filteringButtonTapped(button: UIButton) {
-        
-        let title = button.titleLabel?.text
+ 
+        guard let title = button.titleLabel?.text else { return }
         
         switch title {
         case StrokeButton.titleList[0]:
-            callRequest(filter: "sim")
-            reloadButtonColor(button: button)
-            scrollToUp()
+            start = 1
+            sortName = "sim"
+            filteringProcess(button: button)
         case StrokeButton.titleList[1]:
-            callRequest(filter: "date")
-            reloadButtonColor(button: button)
-            scrollToUp()
+            start = 1
+            sortName = "date"
+            filteringProcess(button: button)
         case StrokeButton.titleList[2]:
-            callRequest(filter: "dsc")
-            reloadButtonColor(button: button)
-            scrollToUp()
+            start = 1
+            sortName = "dsc"
+            filteringProcess(button: button)
         case StrokeButton.titleList[3]:
-            callRequest(filter: "asc")
-            reloadButtonColor(button: button)
-            scrollToUp()
+            start = 1
+            sortName = "asc"
+            filteringProcess(button: button)
         default:
             print("title error")
             break
         }
     }
     
+    func filteringProcess(button: UIButton) {
+        callRequest()
+        reloadButtonColor(button: button)
+        scrollToUp()
+    }
+    
+    // 새로 생각해본 로직 - 중복되게 안할 수 있는 방법
     func reloadButtonColor(button: UIButton) {
+        
         for index in 0...3 {
-            filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
-            filteringButtons[index].configuration?.baseForegroundColor = .label
+            if index == button.tag {
+                filteringButtons[index].configuration?.baseBackgroundColor = .label
+                filteringButtons[index].configuration?.baseForegroundColor = .systemBackground
+            } else {
+                filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
+                filteringButtons[index].configuration?.baseForegroundColor = .label
+            }
         }
-        button.configuration?.baseBackgroundColor = .label
-        button.configuration?.baseForegroundColor = .systemBackground
     }
     
     func scrollToUp() {
-        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
     }
 
 }
 
 // MARK: - collectionView 설정
-extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDataSourcePrefetching {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return list.count
@@ -154,7 +174,18 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
         return cell
     }
     
-    
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+        
+        for item in indexPaths {
+            
+            if list.count - 5 == item.row && list.count < self.total {
+                start += list.count
+                callRequest()
+            } else if list.count >= self.total {  // 좀 더 죻은 방법 찾아보기
+                isEnd = true
+            }
+        }
+    }
 }
 
 // MARK: - 레이아웃 및 속성 설정
@@ -162,6 +193,7 @@ extension SearchResultViewController: ShoppingConfigure {
     func configHierarchy() {
         collectionView.delegate = self
         collectionView.dataSource = self
+        collectionView.prefetchDataSource = self
         
         view.addSubview(resultCountLabel)
         view.addSubview(filterStackview)
@@ -195,7 +227,7 @@ extension SearchResultViewController: ShoppingConfigure {
     
     func configView() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = nvtitle
+        navigationItem.title = keyword
         
         for index in 0...3 {
             filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
