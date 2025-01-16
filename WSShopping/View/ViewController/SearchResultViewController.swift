@@ -89,15 +89,19 @@ class SearchResultViewController: UIViewController {
         case "정확도":
             callRequest(filter: "sim")
             reloadButtonColor(button: button)
+            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
         case "날짜순":
             callRequest(filter: "date")
             reloadButtonColor(button: button)
+            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
         case "가격높은순":
             callRequest(filter: "dsc")
             reloadButtonColor(button: button)
+            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
         case "가격낮은순":
             callRequest(filter: "asc")
             reloadButtonColor(button: button)
+            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
         default:
             print("title error")
             break
