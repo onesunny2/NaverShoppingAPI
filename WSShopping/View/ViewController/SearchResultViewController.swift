@@ -137,8 +137,11 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchResultCollectionViewCell.id, for: indexPath) as? SearchResultCollectionViewCell else { return UICollectionViewCell() }
         
         let url = currentArray.image
+        
         guard let intPrice = Int(currentArray.price)?.formatted() else { return UICollectionViewCell() }
+        
         let processor = DownsamplingImageProcessor(size: CGSize(width: cell.thumnailImageView.frame.width, height: cell.thumnailImageView.frame.height))
+        
         cell.thumnailImageView.kf.setImage(with: URL(string: url),
                                            options: [.processor(processor),
                                                      .scaleFactor(UIScreen.main.scale),
