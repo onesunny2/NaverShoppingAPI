@@ -61,7 +61,7 @@ extension MainViewController: UISearchBarDelegate {
             // 화면 전환 시키기 & keyword 다음으로 전달
             let vc = SearchResultViewController()
             navigationController?.pushViewController(vc, animated: true)
-            vc.nvtitle = keyword
+            vc.keyword = keyword
         default:
             break
         }

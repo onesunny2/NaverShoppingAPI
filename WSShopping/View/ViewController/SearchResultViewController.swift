@@ -12,7 +12,7 @@ import SnapKit
 
 class SearchResultViewController: UIViewController {
     
-    lazy var resultCountLabel = ResultLabel(title: resultCount, size: 15, weight: .bold, color: .systemGreen)
+    lazy var resultCountLabel = ResultLabel(title: "", size: 15, weight: .bold, color: .systemGreen)
     var filteringButtons: [UIButton] = []
     lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout())
     lazy var filterStackview = {
@@ -24,15 +24,19 @@ class SearchResultViewController: UIViewController {
         return stackview
     }()
     
-    var alamo = AlamofireManager()
+    var start = 1
+    var keyword = ""
+    var sortName = "sim"
+    var total = 0
+    var isEnd = false
+    var list: [ShoppingDetail] = [] {
+        didSet {
+            self.collectionView.reloadData()
+        }
+    }
     
     let buttonTitle = StrokeButton.titleList
-    var currentButton = StrokeButton.titleList[0]
-    var nvtitle = ""
-    var resultCount = ""
-    var start = 1
-    var list: [ShoppingDetail] = []
-    var filter = "sim"
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -72,60 +76,48 @@ class SearchResultViewController: UIViewController {
     
     func callRequest() {
         
-        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=30&sort=\(filter)&start=\(start)"
-        let headers = HTTPHeaders(["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret])
-        
-        AF.request(url, method: .get, headers: headers).responseString { value in
-            print(value)
+        AlamofireManager.shared.getShoppingResult(keyword: keyword, sortName: sortName, start: start) { value in
+
+            if self.start == 1 {
+                self.total = value.total
+                self.resultCountLabel.text = String(self.total.formatted()) + "개의 검색결과"
+                self.list = value.items
+            } else {
+                self.list.append(contentsOf: value.items)
+            }
         }
         
-        AF.request(url, method: .get, headers: headers).responseDecodable(of: Shopping.self) { response in
-            
-            print(response.response?.statusCode)
-            
-            switch response.result {
-            case .success(let value):
-                
-                self.resultCountLabel.text = String(value.total.formatted()) + "개의 검색결과"
-                
-                if self.start == 1{
-                    self.list = value.items
-                    print(self.list.count)
-                } else {
-                    self.list.append(contentsOf: value.items)
-                    print(self.list.count)
-                }
-                
-                self.collectionView.reloadData()
-                
-            case .failure(let error):
-                print(error)
-        }
-        }
     }
     
     @objc
     func filteringButtonTapped(button: UIButton) {
-        
+ 
         guard let title = button.titleLabel?.text else { return }
         
         switch title {
         case StrokeButton.titleList[0]:
-            filteringProcess(title: title, button: button)
+            start = 1
+            sortName = "sim"
+            filteringProcess(button: button)
         case StrokeButton.titleList[1]:
-            filteringProcess(title: title, button: button)
+            start = 1
+            sortName = "date"
+            filteringProcess(button: button)
         case StrokeButton.titleList[2]:
-            filteringProcess(title: title, button: button)
+            start = 1
+            sortName = "dsc"
+            filteringProcess(button: button)
         case StrokeButton.titleList[3]:
-            filteringProcess(title: title, button: button)
+            start = 1
+            sortName = "asc"
+            filteringProcess(button: button)
         default:
             print("title error")
             break
         }
     }
     
-    func filteringProcess(title: String, button: UIButton) {
-        filter = title
+    func filteringProcess(button: UIButton) {
         callRequest()
         reloadButtonColor(button: button)
         scrollToUp()
@@ -146,7 +138,7 @@ class SearchResultViewController: UIViewController {
     }
     
     func scrollToUp() {
-        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
     }
 
 }
@@ -185,9 +177,12 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         
         for item in indexPaths {
-            if list.count - 5 == item.row {
+            
+            if list.count - 5 == item.row && list.count < self.total {
                 start += list.count
                 callRequest()
+            } else if list.count >= self.total {  // 좀 더 죻은 방법 찾아보기
+                isEnd = true
             }
         }
     }
@@ -232,7 +227,7 @@ extension SearchResultViewController: ShoppingConfigure {
     
     func configView() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = nvtitle
+        navigationItem.title = keyword
         
         for index in 0...3 {
             filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
