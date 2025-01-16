@@ -24,18 +24,23 @@ class SearchResultViewController: UIViewController {
         return stackview
     }()
     
+    let buttonTitle = StrokeButton.titleList
     var nvtitle = ""
     var resultCount = ""
     var page = 1
+    var currentButton = StrokeButton.titleList[0]
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let title = StrokeButton.titleList
-        let isTapped = [true, false, false, false]
-        
         for index in 0...3 {
-            filteringButtons.append(StrokeButton(title: title[index], isTapped: isTapped[index]))
+
+            if index == 0 {
+                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: true))
+            } else {
+                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: false))
+            }
+            
             filteringButtons[index].tag = index
         }
 
@@ -91,22 +96,30 @@ class SearchResultViewController: UIViewController {
     @objc
     func filteringButtonTapped(button: UIButton) {
         
-        let title = button.titleLabel?.text
+        guard let title = button.titleLabel?.text else { return }
         
         switch title {
         case StrokeButton.titleList[0]:
+            print(button.tag)
+            currentButton = title
             callRequest(filter: "sim")
             reloadButtonColor(button: button)
             scrollToUp()
         case StrokeButton.titleList[1]:
+            print(button.tag)
+            currentButton = title
             callRequest(filter: "date")
             reloadButtonColor(button: button)
             scrollToUp()
         case StrokeButton.titleList[2]:
+            print(button.tag)
+            currentButton = title
             callRequest(filter: "dsc")
             reloadButtonColor(button: button)
             scrollToUp()
         case StrokeButton.titleList[3]:
+            print(button.tag)
+            currentButton = title
             callRequest(filter: "asc")
             reloadButtonColor(button: button)
             scrollToUp()
@@ -116,14 +129,18 @@ class SearchResultViewController: UIViewController {
         }
     }
     
-    // ✅ 아래 방법에 대해 멘토님 질문하기
+    // 새로 생각해본 로직 - 중복되게 안할 수 있는 방법
     func reloadButtonColor(button: UIButton) {
+        
         for index in 0...3 {
-            filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
-            filteringButtons[index].configuration?.baseForegroundColor = .label
+            if index == button.tag {
+                filteringButtons[index].configuration?.baseBackgroundColor = .label
+                filteringButtons[index].configuration?.baseForegroundColor = .systemBackground
+            } else {
+                filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
+                filteringButtons[index].configuration?.baseForegroundColor = .label
+            }
         }
-        button.configuration?.baseBackgroundColor = .label
-        button.configuration?.baseForegroundColor = .systemBackground
     }
     
     func scrollToUp() {
@@ -168,7 +185,7 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
         for item in indexPaths {
             if list.count - 5 == item.row {
                 page += 1
-                callRequest(filter: "sim")
+                callRequest(filter: "\(currentButton)")
                 print(self.page)
             }
         }
