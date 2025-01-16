@@ -89,19 +89,19 @@ class SearchResultViewController: UIViewController {
         case StrokeButton.titleList[0]:
             callRequest(filter: "sim")
             reloadButtonColor(button: button)
-            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+            scrollToUp()
         case StrokeButton.titleList[1]:
             callRequest(filter: "date")
             reloadButtonColor(button: button)
-            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+            scrollToUp()
         case StrokeButton.titleList[2]:
             callRequest(filter: "dsc")
             reloadButtonColor(button: button)
-            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+            scrollToUp()
         case StrokeButton.titleList[3]:
             callRequest(filter: "asc")
             reloadButtonColor(button: button)
-            collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+            scrollToUp()
         default:
             print("title error")
             break
@@ -115,6 +115,10 @@ class SearchResultViewController: UIViewController {
         }
         button.configuration?.baseBackgroundColor = .label
         button.configuration?.baseForegroundColor = .systemBackground
+    }
+    
+    func scrollToUp() {
+        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
     }
 
 }
