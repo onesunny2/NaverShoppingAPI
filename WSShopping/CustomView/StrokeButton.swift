@@ -34,8 +34,8 @@ class StrokeButton: BaseButton {
         configuration?.cornerStyle = .medium
         configuration?.title = title
         configuration?.attributedTitle = AttributedString(title, attributes: container)
-        configuration?.baseForegroundColor = isTapped ? .label : .systemBackground
-        configuration?.baseBackgroundColor = isTapped ? .systemBackground : .label
+        configuration?.baseForegroundColor = isTapped ? .systemBackground : .label
+        configuration?.baseBackgroundColor = isTapped ? .label : .systemBackground
         configuration?.background.strokeColor = .label
         configuration?.background.strokeWidth = 1
     }

@@ -7,6 +7,7 @@
 
 import UIKit
 import Alamofire
+import Kingfisher
 import SnapKit
 
 class SearchResultViewController: UIViewController {
@@ -24,7 +25,7 @@ class SearchResultViewController: UIViewController {
     }()
     
     var nvtitle = ""
-    var resultCount = "222,222,222개의 검색결과"
+    var resultCount = ""
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,13 +35,14 @@ class SearchResultViewController: UIViewController {
         
         for index in 0...3 {
             filteringButtons.append(StrokeButton(title: title[index], isTapped: isTapped[index]))
+            filteringButtons[index].tag = index
         }
-        
-        print(filteringButtons.description)
 
         configHierarchy()
         configLayout()
         configView()
+        
+        callRequest(filter: "sim")
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -56,21 +58,98 @@ class SearchResultViewController: UIViewController {
         
         return layout
     }
+    
+    func callRequest(filter: String) {
+        
+        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=100&sort=\(filter)"
+        let headers = HTTPHeaders(["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret])
+        
+        AF.request(url, method: .get, headers: headers).responseDecodable(of: Shopping.self) { response in
+            
+            print(response.response?.statusCode)
+            
+            switch response.result {
+            case .success(let value):
+                self.resultCountLabel.text = String(value.total.formatted()) + "개의 검색결과"
+                list = value.items
+                
+                self.collectionView.reloadData()
+            case .failure(let error):
+                print(error)
+        }
+        }
+    }
+    
+    @objc
+    func filteringButtonTapped(button: UIButton) {
+        
+        let title = button.titleLabel?.text
+        
+        switch title {
+        case StrokeButton.titleList[0]:
+            callRequest(filter: "sim")
+            reloadButtonColor(button: button)
+            scrollToUp()
+        case StrokeButton.titleList[1]:
+            callRequest(filter: "date")
+            reloadButtonColor(button: button)
+            scrollToUp()
+        case StrokeButton.titleList[2]:
+            callRequest(filter: "dsc")
+            reloadButtonColor(button: button)
+            scrollToUp()
+        case StrokeButton.titleList[3]:
+            callRequest(filter: "asc")
+            reloadButtonColor(button: button)
+            scrollToUp()
+        default:
+            print("title error")
+            break
+        }
+    }
+    
+    func reloadButtonColor(button: UIButton) {
+        for index in 0...3 {
+            filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
+            filteringButtons[index].configuration?.baseForegroundColor = .label
+        }
+        button.configuration?.baseBackgroundColor = .label
+        button.configuration?.baseForegroundColor = .systemBackground
+    }
+    
+    func scrollToUp() {
+        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+    }
 
 }
 
 // MARK: - collectionView 설정
 extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 100
+        return list.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
+        let currentArray = list[indexPath.row]
+        
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchResultCollectionViewCell.id, for: indexPath) as? SearchResultCollectionViewCell else { return UICollectionViewCell() }
         
-        cell.thumnailImageView.image = UIImage(named: "zzamong")
+        let url = currentArray.image
+        
+        guard let intPrice = Int(currentArray.price)?.formatted() else { return UICollectionViewCell() }
+        
+        let processor = DownsamplingImageProcessor(size: CGSize(width: cell.thumnailImageView.frame.width, height: cell.thumnailImageView.frame.height))
+        
+        cell.thumnailImageView.kf.setImage(with: URL(string: url),
+                                           options: [.processor(processor),
+                                                     .scaleFactor(UIScreen.main.scale),
+                                                     .cacheOriginalImage])
         cell.thumnailImageView.contentMode = .scaleAspectFill
+        cell.mallNameLabel.text = currentArray.mallName
+        cell.titleLabel.text = currentArray.title.escapingHTML
+        cell.priceLabel.text = String(intPrice) + "원"
         
         return cell
     }
@@ -117,6 +196,10 @@ extension SearchResultViewController: ShoppingConfigure {
     func configView() {
         view.backgroundColor = .systemBackground
         navigationItem.title = nvtitle
+        
+        for index in 0...3 {
+            filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
+        }
     }
     
     

@@ -13,13 +13,9 @@ class SearchResultCollectionViewCell: UICollectionViewCell {
     static let id = "SearchResultCollectionViewCell"
     
     let thumnailImageView = UIImageView()
-    lazy var mallNameLabel = ResultLabel(title: mallName, size: 11, weight: .light, color: .systemGray3)
-    lazy var titleLabel = ResultLabel(title: title, size: 12, weight: .regular, color: .label, line: 2)
-    lazy var priceLabel = ResultLabel(title: price, size: 15, weight: .semibold, color: .label)
-    
-    var mallName = "mallname"
-    var title = "title"
-    var price = "price"
+    lazy var mallNameLabel = ResultLabel(title: "", size: 11, weight: .light, color: .lightGray)
+    lazy var titleLabel = ResultLabel(title: "", size: 12, weight: .regular, color: .label, line: 2)
+    lazy var priceLabel = ResultLabel(title: "", size: 15, weight: .semibold, color: .label)
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -63,7 +59,7 @@ extension SearchResultCollectionViewCell {
         contentView.addSubview(priceLabel)
         
         mallNameLabel.snp.makeConstraints {
-            $0.top.equalTo(thumnailImageView.snp.bottom).offset(2)
+            $0.top.equalTo(thumnailImageView.snp.bottom).offset(3)
             $0.horizontalEdges.equalTo(safeAreaLayoutGuide).inset(8)
         }
         
