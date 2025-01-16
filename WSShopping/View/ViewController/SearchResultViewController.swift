@@ -35,19 +35,14 @@ class SearchResultViewController: UIViewController {
         
         for index in 0...3 {
             filteringButtons.append(StrokeButton(title: title[index], isTapped: isTapped[index]))
+            filteringButtons[index].tag = index
         }
 
         configHierarchy()
         configLayout()
         configView()
         
-        callRequest()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-//        callRequest()
+        callRequest(filter: "sim")
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -64,9 +59,9 @@ class SearchResultViewController: UIViewController {
         return layout
     }
     
-    func callRequest() {
+    func callRequest(filter: String) {
         
-        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=100"
+        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=100&sort=\(filter)"
         let headers = HTTPHeaders(["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret])
         
         AF.request(url, method: .get, headers: headers).responseDecodable(of: Shopping.self) { response in
@@ -83,6 +78,39 @@ class SearchResultViewController: UIViewController {
                 print(error)
         }
         }
+    }
+    
+    @objc
+    func filteringButtonTapped(button: UIButton) {
+        
+        let title = button.titleLabel?.text
+        
+        switch title {
+        case "정확도":
+            callRequest(filter: "sim")
+            reloadButtonColor(button: button)
+        case "날짜순":
+            callRequest(filter: "date")
+            reloadButtonColor(button: button)
+        case "가격높은순":
+            callRequest(filter: "dsc")
+            reloadButtonColor(button: button)
+        case "가격낮은순":
+            callRequest(filter: "asc")
+            reloadButtonColor(button: button)
+        default:
+            print("title error")
+            break
+        }
+    }
+    
+    func reloadButtonColor(button: UIButton) {
+        for index in 0...3 {
+            filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
+            filteringButtons[index].configuration?.baseForegroundColor = .label
+        }
+        button.configuration?.baseBackgroundColor = .label
+        button.configuration?.baseForegroundColor = .systemBackground
     }
 
 }
@@ -109,8 +137,8 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
                                                      .cacheOriginalImage])
         cell.thumnailImageView.contentMode = .scaleAspectFill
         cell.mallNameLabel.text = currentArray.mallName
-        cell.titleLabel.text = currentArray.title
-        cell.priceLabel.text = String(intPrice)
+        cell.titleLabel.text = currentArray.title.escapingHTML
+        cell.priceLabel.text = String(intPrice) + "원"
         
         return cell
     }
@@ -157,6 +185,10 @@ extension SearchResultViewController: ShoppingConfigure {
     func configView() {
         view.backgroundColor = .systemBackground
         navigationItem.title = nvtitle
+        
+        for index in 0...3 {
+            filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
+        }
     }
     
     
