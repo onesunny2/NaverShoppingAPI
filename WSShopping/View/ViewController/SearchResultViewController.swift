@@ -86,19 +86,19 @@ class SearchResultViewController: UIViewController {
         let title = button.titleLabel?.text
         
         switch title {
-        case "정확도":
+        case StrokeButton.titleList[0]:
             callRequest(filter: "sim")
             reloadButtonColor(button: button)
             collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-        case "날짜순":
+        case StrokeButton.titleList[1]:
             callRequest(filter: "date")
             reloadButtonColor(button: button)
             collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-        case "가격높은순":
+        case StrokeButton.titleList[2]:
             callRequest(filter: "dsc")
             reloadButtonColor(button: button)
             collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-        case "가격낮은순":
+        case StrokeButton.titleList[3]:
             callRequest(filter: "asc")
             reloadButtonColor(button: button)
             collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
