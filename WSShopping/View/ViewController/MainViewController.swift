@@ -57,6 +57,10 @@ extension MainViewController: UISearchBarDelegate {
             homecontent.isValid = false
             defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
             defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
+            searchbar.text = ""
+            alertWordCount(message: "2글자 이상 입력해주세요!") {
+                UIAlertAction(title: "확인", style: .cancel)
+            }
         case 2...:
             // 화면 전환 시키기 & keyword 다음으로 전달
             let vc = SearchResultViewController()
