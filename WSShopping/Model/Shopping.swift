@@ -24,6 +24,7 @@ struct ShoppingDetail: Decodable {
         case price = "lprice"
         case mallName
     }
+
 }
 
 

@@ -26,6 +26,7 @@ class SearchResultViewController: UIViewController {
     
     var nvtitle = ""
     var resultCount = ""
+    var page = 1
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -61,19 +62,26 @@ class SearchResultViewController: UIViewController {
     
     func callRequest(filter: String) {
         
-        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=100&sort=\(filter)"
+        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(nvtitle)&display=30&sort=\(filter)&start=\(page)"
         let headers = HTTPHeaders(["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret])
         
         AF.request(url, method: .get, headers: headers).responseDecodable(of: Shopping.self) { response in
             
-            print(response.response?.statusCode)
-            
             switch response.result {
             case .success(let value):
+                
                 self.resultCountLabel.text = String(value.total.formatted()) + "개의 검색결과"
-                list = value.items
+                
+                if self.page == 1{
+                    print(self.page)
+                    list = value.items
+                } else {
+                    print(self.page)
+                    list.append(contentsOf: value.items)
+                }
                 
                 self.collectionView.reloadData()
+                
             case .failure(let error):
                 print(error)
         }
@@ -108,6 +116,7 @@ class SearchResultViewController: UIViewController {
         }
     }
     
+    // ✅ 아래 방법에 대해 멘토님 질문하기
     func reloadButtonColor(button: UIButton) {
         for index in 0...3 {
             filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
@@ -124,7 +133,7 @@ class SearchResultViewController: UIViewController {
 }
 
 // MARK: - collectionView 설정
-extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDataSourcePrefetching {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return list.count
@@ -154,7 +163,16 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
         return cell
     }
     
-    
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+        
+        for item in indexPaths {
+            if list.count - 5 == item.row {
+                page += 1
+                callRequest(filter: "sim")
+                print(self.page)
+            }
+        }
+    }
 }
 
 // MARK: - 레이아웃 및 속성 설정
@@ -162,6 +180,7 @@ extension SearchResultViewController: ShoppingConfigure {
     func configHierarchy() {
         collectionView.delegate = self
         collectionView.dataSource = self
+        collectionView.prefetchDataSource = self
         
         view.addSubview(resultCountLabel)
         view.addSubview(filterStackview)
