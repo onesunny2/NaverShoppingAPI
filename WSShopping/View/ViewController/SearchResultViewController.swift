@@ -40,7 +40,6 @@ class SearchResultViewController: UIViewController {
     
     let buttonTitle = StrokeButton.titleList
     
-
     override func viewDidLoad() {
         super.viewDidLoad()
         

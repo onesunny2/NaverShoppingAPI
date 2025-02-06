@@ -10,6 +10,8 @@ import SnapKit
 
 final class MainViewController: UIViewController {
     
+    private let viewModel = MainViewModel()
+    
     private let searchbar = UISearchBar()
     private let defaultImage = UIImageView()
     private let defaultLabel = UILabel()
@@ -25,6 +27,7 @@ final class MainViewController: UIViewController {
         configHierarchy()
         configLayout()
         configView()
+        bindData()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -35,6 +38,30 @@ final class MainViewController: UIViewController {
         homecontent.isValid = true
         defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
         defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
+    }
+    
+    private func bindData() {
+        
+        viewModel.outputCheckValid.lazyBind { isValid in
+
+            let image = self.viewModel.name(isValid ? .validImage : .inValidImage)
+            let text = self.viewModel.name(isValid ? .validText : .InvalidText)
+            self.defaultImage.image = UIImage(named: image)
+            self.defaultLabel.text = text
+            
+            if !isValid {
+                self.searchbar.text = ""
+                self.alertWordCount(message: "2글자 이상 입력해주세요!") {
+                    UIAlertAction(title: "확인", style: .cancel)
+                }
+            } else {
+                let vc = SearchResultViewController()
+                
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
+
+            self.view.endEditing(true)
+        }
     }
     
     @objc
@@ -50,27 +77,29 @@ extension MainViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         
-        guard let keyword = searchBar.text else { return }
+        viewModel.inputSearchText.value = searchBar.text
         
-        switch keyword.count {
-        case 0..<2:
-            homecontent.isValid = false
-            defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
-            defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
-            searchbar.text = ""
-            alertWordCount(message: "2글자 이상 입력해주세요!") {
-                UIAlertAction(title: "확인", style: .cancel)
-            }
-        case 2...:
-            // 화면 전환 시키기 & keyword 다음으로 전달
-            let vc = SearchResultViewController()
-            navigationController?.pushViewController(vc, animated: true)
-            vc.keyword = keyword
-        default:
-            break
-        }
-        
-        view.endEditing(true)
+//        guard let keyword = searchBar.text else { return }
+//        
+//        switch keyword.count {
+//        case 0..<2:
+//            homecontent.isValid = false
+//            defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
+//            defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
+//            searchbar.text = ""
+//            alertWordCount(message: "2글자 이상 입력해주세요!") {
+//                UIAlertAction(title: "확인", style: .cancel)
+//            }
+//        case 2...:
+//            // 화면 전환 시키기 & keyword 다음으로 전달
+//            let vc = SearchResultViewController()
+//            navigationController?.pushViewController(vc, animated: true)
+//            vc.keyword = keyword
+//        default:
+//            break
+//        }
+//        
+//        view.endEditing(true)
     }
 }
 
