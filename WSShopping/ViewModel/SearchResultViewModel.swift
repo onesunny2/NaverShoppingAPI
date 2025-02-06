@@ -22,7 +22,7 @@ final class SearchResultViewModel {
     
     init() {
         
-        inputQuery.bind { data in
+        inputQuery.lazyBind { data in
             
             let keyword = data.0
             let sort = data.1

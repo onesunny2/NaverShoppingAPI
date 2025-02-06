@@ -17,7 +17,17 @@ final class AlamofireManager {
     func callRequest<T: Decodable>(_ type: T.Type, api: ApiUrl,  completionHandler: @escaping (Result<T, AFError>) -> ()) {
         
         AF.request(
-            api.endPoint,
+            api.baseUrl,
+            method: api.method,
+            parameters: api.parameters,
+            encoding: URLEncoding(destination: .queryString),
+            headers: api.header
+        ).responseString { result in
+            print(result)
+        }
+        
+        AF.request(
+            api.baseUrl,
             method: api.method,
             parameters: api.parameters,
             encoding: URLEncoding(destination: .queryString),
@@ -49,11 +59,7 @@ extension AlamofireManager {
         }
         
         var baseUrl: String {
-            return "https://openapi.naver.com/v1"
-        }
-        
-        var endPoint: String {
-            return baseUrl + "search/shop.json"
+            return "https://openapi.naver.com/v1/search/shop.json"
         }
         
         var parameters: Parameters {

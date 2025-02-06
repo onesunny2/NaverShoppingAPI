@@ -51,6 +51,7 @@ final class MainViewController: UIViewController {
                 
                 let vc = SearchResultViewController()
                 vc.viewModel.inputQuery.value.0 = self.viewModel.inputSearchText.value ?? ""
+                print(vc.viewModel.inputQuery.value.0)
                 self.navigationController?.pushViewController(vc, animated: true)
             }
             
