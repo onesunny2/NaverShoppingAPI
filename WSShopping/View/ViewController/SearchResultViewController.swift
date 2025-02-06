@@ -10,10 +10,9 @@ import Alamofire
 import Kingfisher
 import SnapKit
 
-// BaseView는 주말에 재도전..
-// 네트워크 통신 오류 해결은 print를 잘 찍어보자... 하루를 다 써버린...
-
-class SearchResultViewController: UIViewController {
+final class SearchResultViewController: UIViewController {
+    
+    let viewModel = SearchResultViewModel()
     
     lazy var resultCountLabel = ResultLabel(title: "", size: 15, weight: .bold, color: .systemGreen)
     var filteringButtons: [UIButton] = []
@@ -27,11 +26,11 @@ class SearchResultViewController: UIViewController {
         return stackview
     }()
     
-    var start = 1
-    var keyword = ""
-    var sortName = "sim"
-    var total = 0
-    var isEnd = false
+//    var start = 1
+//    var keyword = ""
+//    var sortName = "sim"
+//    var total = 0
+//    var isEnd = false
     var list: [ShoppingDetail] = [] {
         didSet {
             self.collectionView.reloadData()
@@ -58,8 +57,17 @@ class SearchResultViewController: UIViewController {
         configLayout()
         configView()
         
-        callRequest()
+//        callRequest()
 
+    }
+    
+    private func bindData() {
+        viewModel.outputRequest.bind { data in
+            // start = 1 일 때 데이터 리로드 하도록
+            self.viewModel.outputReloadAction.value = {
+                self.collectionView.reloadData()
+            }()
+        }
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -76,20 +84,20 @@ class SearchResultViewController: UIViewController {
         return layout
     }
     
-    func callRequest() {
-        
-        AlamofireManager.shared.getShoppingResult(keyword: keyword, sortName: sortName, start: start) { value in
-
-            if self.start == 1 {
-                self.total = value.total
-                self.resultCountLabel.text = String(self.total.formatted()) + "개의 검색결과"
-                self.list = value.items
-            } else {
-                self.list.append(contentsOf: value.items)
-            }
-        }
-        
-    }
+//    func callRequest() {
+//        
+//        AlamofireManager.shared.getShoppingResult(keyword: keyword, sortName: sortName, start: start) { value in
+//
+//            if self.start == 1 {
+//                self.total = value.total
+//                self.resultCountLabel.text = String(self.total.formatted()) + "개의 검색결과"
+//                self.list = value.items
+//            } else {
+//                self.list.append(contentsOf: value.items)
+//            }
+//        }
+//        
+//    }
     
     @objc
     func filteringButtonTapped(button: UIButton) {
@@ -98,20 +106,20 @@ class SearchResultViewController: UIViewController {
         
         switch title {
         case StrokeButton.titleList[0]:
-            start = 1
-            sortName = "sim"
+            viewModel.inputQuery.value.2 = 1
+            viewModel.inputQuery.value.1 = "sim"
             filteringProcess(button: button)
         case StrokeButton.titleList[1]:
-            start = 1
-            sortName = "date"
+            viewModel.inputQuery.value.2 = 1
+            viewModel.inputQuery.value.1  = "date"
             filteringProcess(button: button)
         case StrokeButton.titleList[2]:
-            start = 1
-            sortName = "dsc"
+            viewModel.inputQuery.value.2 = 1
+            viewModel.inputQuery.value.1  = "dsc"
             filteringProcess(button: button)
         case StrokeButton.titleList[3]:
-            start = 1
-            sortName = "asc"
+            viewModel.inputQuery.value.2 = 1
+            viewModel.inputQuery.value.1  = "asc"
             filteringProcess(button: button)
         default:
             print("title error")
@@ -120,7 +128,7 @@ class SearchResultViewController: UIViewController {
     }
     
     func filteringProcess(button: UIButton) {
-        callRequest()
+        viewModel.inputRequest.value = ()
         reloadButtonColor(button: button)
         scrollToUp()
     }
@@ -149,12 +157,12 @@ class SearchResultViewController: UIViewController {
 extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDataSourcePrefetching {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return list.count
+        return viewModel.outputRequest.value.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
-        let currentArray = list[indexPath.row]
+        guard let currentArray = viewModel.outputRequest.value[indexPath.row] else { return UICollectionViewCell() }
         
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchResultCollectionViewCell.id, for: indexPath) as? SearchResultCollectionViewCell else { return UICollectionViewCell() }
         
@@ -178,15 +186,19 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
     
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         
-        for item in indexPaths {
-            
-            if list.count - 5 == item.row && list.count < self.total {
-                start += list.count
-                callRequest()
-            } else if list.count >= self.total {  // 좀 더 죻은 방법 찾아보기
-                isEnd = true
-            }
-        }
+        viewModel.inputPrefetch.value = (indexPaths)
+        
+//        for item in indexPaths {
+//            
+////            viewModel.inputPrefetch.value = ()
+//            
+//            if list.count - 5 == item.row && list.count < self.total {
+//                start += list.count
+//                callRequest()
+//            } else if list.count >= self.total {  // 좀 더 죻은 방법 찾아보기
+//                isEnd = true
+//            }
+//        }
     }
 }
 
@@ -229,7 +241,7 @@ extension SearchResultViewController: ShoppingConfigure {
     
     func configView() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = keyword
+        navigationItem.title = viewModel.inputQuery.value.0
         
         for index in 0...3 {
             filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
