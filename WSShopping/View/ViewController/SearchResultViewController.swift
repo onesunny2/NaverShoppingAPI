@@ -31,11 +31,11 @@ final class SearchResultViewController: UIViewController {
 //    var sortName = "sim"
 //    var total = 0
 //    var isEnd = false
-    var list: [ShoppingDetail] = [] {
-        didSet {
-            self.collectionView.reloadData()
-        }
-    }
+//    var list: [ShoppingDetail] = [] {
+//        didSet {
+//            self.collectionView.reloadData()
+//        }
+//    }
     
     let buttonTitle = StrokeButton.titleList
     
@@ -58,7 +58,7 @@ final class SearchResultViewController: UIViewController {
         configView()
         
 //        callRequest()
-
+        bindData()
     }
     
     private func bindData() {
@@ -67,6 +67,10 @@ final class SearchResultViewController: UIViewController {
             self.viewModel.outputReloadAction.value = {
                 self.collectionView.reloadData()
             }()
+        }
+        
+        viewModel.outputTotal.lazyBind { total in
+            self.resultCountLabel.text = String(self.viewModel.outputTotal.value.formatted()) + "개의 검색결과"
         }
     }
     

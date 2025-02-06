@@ -58,11 +58,12 @@ final class SearchResultViewModel {
             
             switch result {
             case .success(let success):
-                dump(success)
+
                 self.outputRequest.value = success.items
-                
+
                 if start == 1 {
                     self.outputTotal.value = success.total
+                    print(self.outputTotal.value)
                     self.outputReloadAction.value = ()
                 } else {
                     self.outputRequest.value.append(contentsOf: success.items)
