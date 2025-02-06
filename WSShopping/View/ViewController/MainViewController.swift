@@ -8,13 +8,13 @@
 import UIKit
 import SnapKit
 
-class MainViewController: UIViewController {
+final class MainViewController: UIViewController {
     
-    let searchbar = UISearchBar()
-    let defaultImage = UIImageView()
-    let defaultLabel = UILabel()
+    private let viewModel = MainViewModel()
     
-    var homecontent = HomeContent(isValid: true)
+    private let searchbar = UISearchBar()
+    private let defaultImage = UIImageView()
+    private let defaultLabel = UILabel()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,17 +24,39 @@ class MainViewController: UIViewController {
 
         configHierarchy()
         configLayout()
+        defaultContent()
         configView()
+        bindData()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
-        searchbar.text = ""
+        defaultContent()
+    }
+    
+    private func bindData() {
         
-        homecontent.isValid = true
-        defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
-        defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
+        viewModel.outputCheckValid.lazyBind { isValid in
+            
+            if !isValid {
+                self.defaultImage.image = UIImage(named: self.viewModel.name(.inValidImage))
+                self.defaultLabel.text = self.viewModel.name(.InvalidText)
+                self.alertWordCount(message: "2글자 이상 입력해주세요!") {
+                    UIAlertAction(title: "확인", style: .cancel)
+                }
+            } else {
+                self.defaultImage.image = UIImage(named: self.viewModel.name(.validImage))
+                self.defaultLabel.text = self.viewModel.name(.InvalidText)
+                
+                let vc = SearchResultViewController()
+                vc.keyword = self.viewModel.inputSearchText.value ?? ""
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
+            
+            self.searchbar.text = ""
+            self.view.endEditing(true)
+        }
     }
     
     @objc
@@ -50,27 +72,7 @@ extension MainViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         
-        guard let keyword = searchBar.text else { return }
-        
-        switch keyword.count {
-        case 0..<2:
-            homecontent.isValid = false
-            defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
-            defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
-            searchbar.text = ""
-            alertWordCount(message: "2글자 이상 입력해주세요!") {
-                UIAlertAction(title: "확인", style: .cancel)
-            }
-        case 2...:
-            // 화면 전환 시키기 & keyword 다음으로 전달
-            let vc = SearchResultViewController()
-            navigationController?.pushViewController(vc, animated: true)
-            vc.keyword = keyword
-        default:
-            break
-        }
-        
-        view.endEditing(true)
+        viewModel.inputSearchText.value = searchBar.text
     }
 }
 
@@ -99,7 +101,7 @@ extension MainViewController: ShoppingConfigure {
         
         defaultLabel.snp.makeConstraints {
             $0.centerX.equalTo(defaultImage)
-            $0.top.equalTo(defaultImage.snp.bottom).offset(homecontent.isValid ? -20 : -60)
+            $0.top.equalTo(defaultImage.snp.bottom).offset(-30)
             $0.width.equalTo(300)
         }
     }
@@ -113,15 +115,16 @@ extension MainViewController: ShoppingConfigure {
         searchbar.searchBarStyle = .minimal
         searchbar.placeholder = HomeContent.placeholder
         
-        defaultImage.image = UIImage(named: homecontent.isValidCheck(content: Contents.imageName))
         defaultImage.contentMode = .scaleAspectFit
         
-        defaultLabel.text = homecontent.isValidCheck(content: Contents.labelText)
         defaultLabel.textColor = .label
         defaultLabel.font = .systemFont(ofSize: 15, weight: .semibold)
         defaultLabel.textAlignment = .center
         defaultLabel.numberOfLines = 1
     }
     
-    
+    private func defaultContent() {
+        defaultImage.image = UIImage(named: viewModel.name(.validImage))
+        defaultLabel.text = viewModel.name(.InvalidText)
+    }
 }

@@ -10,6 +10,9 @@ import Alamofire
 import Kingfisher
 import SnapKit
 
+// BaseView는 주말에 재도전..
+// 네트워크 통신 오류 해결은 print를 잘 찍어보자... 하루를 다 써버린...
+
 class SearchResultViewController: UIViewController {
     
     lazy var resultCountLabel = ResultLabel(title: "", size: 15, weight: .bold, color: .systemGreen)
@@ -37,7 +40,6 @@ class SearchResultViewController: UIViewController {
     
     let buttonTitle = StrokeButton.titleList
     
-
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -69,7 +71,7 @@ class SearchResultViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         layout.itemSize = CGSize(width: cellWidth, height: cellWidth * 1.5)
-        layout.sectionInset = UIEdgeInsets(top: 8, left: sectionInsect, bottom: 8, right: sectionInsect)
+        layout.sectionInset = UIEdgeInsets(top: 2, left: sectionInsect, bottom: 2, right: sectionInsect)
         
         return layout
     }
