@@ -8,13 +8,13 @@
 import UIKit
 import SnapKit
 
-class MainViewController: UIViewController {
+final class MainViewController: UIViewController {
     
-    let searchbar = UISearchBar()
-    let defaultImage = UIImageView()
-    let defaultLabel = UILabel()
+    private let searchbar = UISearchBar()
+    private let defaultImage = UIImageView()
+    private let defaultLabel = UILabel()
     
-    var homecontent = HomeContent(isValid: true)
+    private var homecontent = HomeContent(isValid: true)
 
     override func viewDidLoad() {
         super.viewDidLoad()
