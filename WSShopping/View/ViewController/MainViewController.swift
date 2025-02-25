@@ -49,9 +49,7 @@ final class MainViewController: UIViewController {
                 self.defaultImage.image = UIImage(named: self.viewModel.name(.validImage))
                 self.defaultLabel.text = self.viewModel.name(.InvalidText)
                 
-                let vc = SearchResultViewController()
-                vc.viewModel.inputQuery.value.0 = self.viewModel.inputSearchText.value ?? ""
-                print(vc.viewModel.inputQuery.value.0)
+                let vc = SearchResultViewController(keyword: self.viewModel.inputSearchText.value ?? "")
                 self.navigationController?.pushViewController(vc, animated: true)
             }
             

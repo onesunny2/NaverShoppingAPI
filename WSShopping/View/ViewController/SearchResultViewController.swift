@@ -12,7 +12,7 @@ import SnapKit
 
 final class SearchResultViewController: UIViewController {
     
-    let viewModel = SearchResultViewModel()
+    let viewModel: SearchResultViewModel
     
     lazy var resultCountLabel = ResultLabel(title: "", size: 15, weight: .bold, color: .systemGreen)
     var filteringButtons: [UIButton] = []
@@ -29,6 +29,12 @@ final class SearchResultViewController: UIViewController {
     
     let buttonTitle = StrokeButton.Sort.allCases
     
+    init(keyword: String) {
+        viewModel = SearchResultViewModel(keyword: keyword)
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -39,6 +45,11 @@ final class SearchResultViewController: UIViewController {
     }
     
     private func bindData() {
+        
+        let input = SearchResultViewModel.Input()
+        let output = viewModel.transform(input: input)
+        
+        
         viewModel.outputRequest.bind { data in
             // start = 1 일 때 데이터 리로드 하도록
             self.viewModel.outputReloadAction.value = {
@@ -100,21 +111,21 @@ final class SearchResultViewController: UIViewController {
             $0.isSelected = false
         }
         
-        let tag = button.tag
-  
-        switch tag {
-        case 0:
-            
-        case 1:
-            
-        case 2:
-            
-        case 3:
-            
-        default:
-            print("button title error")
-            break
-        }
+//        let tag = button.tag
+//  
+//        switch tag {
+//        case 0:
+//            
+//        case 1:
+//            
+//        case 2:
+//            
+//        case 3:
+//            
+//        default:
+//            print("button title error")
+//            break
+//        }
         
     }
     
@@ -127,6 +138,10 @@ final class SearchResultViewController: UIViewController {
         collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
     }
 
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 // MARK: - collectionView 설정
@@ -183,6 +198,17 @@ extension SearchResultViewController: ShoppingConfigure {
         collectionView.dataSource = self
         collectionView.prefetchDataSource = self
         
+        for index in 0...3 {
+
+            if index == 0 {
+                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: true))
+            } else {
+                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: false))
+            }
+            
+            filteringButtons[index].tag = index
+        }
+        
         view.addSubview(resultCountLabel)
         view.addSubview(filterStackview)
         for index in 0...3 {
@@ -216,17 +242,6 @@ extension SearchResultViewController: ShoppingConfigure {
     func configView() {
         view.backgroundColor = .systemBackground
         navigationItem.title = viewModel.inputQuery.value.0
-        
-        for index in 0...3 {
-
-            if index == 0 {
-                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: true))
-            } else {
-                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: false))
-            }
-            
-            filteringButtons[index].tag = index
-        }
         
         for index in 0...3 {
             filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)

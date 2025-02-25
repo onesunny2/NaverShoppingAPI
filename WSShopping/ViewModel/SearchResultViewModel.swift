@@ -36,34 +36,49 @@ final class SearchResultViewModel: BaseViewModel {
     let outputTotal: Observable<Int> = Observable(0)
     var outputIsEnd: Observable<Bool> = Observable(false)
     
-    init() {
+    init(keyword: String) {
         
-        inputQuery.lazyBind { data in
-            
-            let keyword = data.0
-            let sort = data.1
-            let start = data.2
-            
-            print("inputkeyword.bind====", data)
-            self.getSearchResult(keyword, sort, start)
-        }
-        
-        inputRequest.lazyBind { _ in
-            let keyword = self.inputQuery.value.0
-            let sort = self.inputQuery.value.1
-            let start = self.inputQuery.value.2
-            
-            print("inputRequest.bind====", keyword, sort, start)
-            self.getSearchResult(keyword, sort, start)
-        }
-        
-        inputPrefetch.lazyBind { indexPaths in
-            
-            for item in indexPaths {
+        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: "sim", start: 1))
+            .catch { error in
                 
-                self.checkPagenation(item.row)
+                print("shopping error", error)
+                
+                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+                return Single.just(data)
             }
-        }
+            .debug("shopping")
+            .asObservable()
+            .bind(with: self) { this, value in
+                dump(value)
+            }
+            .disposed(by: disposeBag)
+        
+//        inputQuery.lazyBind { data in
+//            
+//            let keyword = data.0
+//            let sort = data.1
+//            let start = data.2
+//            
+//            print("inputkeyword.bind====", data)
+//            self.getSearchResult(keyword, sort, start)
+//        }
+//        
+//        inputRequest.lazyBind { _ in
+//            let keyword = self.inputQuery.value.0
+//            let sort = self.inputQuery.value.1
+//            let start = self.inputQuery.value.2
+//            
+//            print("inputRequest.bind====", keyword, sort, start)
+//            self.getSearchResult(keyword, sort, start)
+//        }
+//        
+//        inputPrefetch.lazyBind { indexPaths in
+//            
+//            for item in indexPaths {
+//                
+//                self.checkPagenation(item.row)
+//            }
+//        }
     }
     
     private func getSearchResult(_ keyword: String, _ sort: String, _ start: Int) {
