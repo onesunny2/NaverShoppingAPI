@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Kingfisher
 import SnapKit
 
 final class SearchResultCollectionViewCell: UICollectionViewCell {
@@ -81,5 +82,20 @@ extension SearchResultCollectionViewCell {
             $0.top.equalTo(titleLabel.snp.bottom).offset(5)
             $0.horizontalEdges.equalTo(safeAreaLayoutGuide).inset(8)
         }
+    }
+    
+    func configureCell(url: String, mallName: String, title: String, price: String) {
+        let processor = DownsamplingImageProcessor(size: CGSize(width: thumnailImageView.frame.width, height: thumnailImageView.frame.height))
+        
+        thumnailImageView.kf.setImage(with: URL(string: url),
+                                           options: [
+                                            .processor(processor),
+                                            .scaleFactor(UIScreen.main.scale),
+                                            .cacheOriginalImage
+                                           ])
+        thumnailImageView.contentMode = .scaleAspectFill
+        mallNameLabel.text = mallName
+        titleLabel.text = title.escapingHTML
+        priceLabel.text = price + "원"
     }
 }

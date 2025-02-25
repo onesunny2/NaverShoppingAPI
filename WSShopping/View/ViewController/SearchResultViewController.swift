@@ -49,7 +49,25 @@ final class SearchResultViewController: UIViewController {
     
     private func bindData() {
         
-        let input = SearchResultViewModel.Input()
+        var buttons: [Observable<Int>] = []
+        
+        for index in 0...3 {
+            let list = filteringButtons[index].rx.tap
+                .withUnretained(self)
+                .map { this, _ in
+                    this.filteringButtons.forEach {
+                        $0.isSelected = false
+                    }
+                    
+                    return this.filteringButtons[index].tag
+                }
+            
+            buttons.append(list)
+        }
+        
+        let input = SearchResultViewModel.Input(
+            buttonTag: buttons
+        )
         let output = viewModel.transform(input: input)
         
         output.totalCount
@@ -67,34 +85,76 @@ final class SearchResultViewController: UIViewController {
                     
                     let url = element.image
                     let price = Int(element.price)?.formatted() ?? ""
-                    let processor = DownsamplingImageProcessor(size: CGSize(width: cell.thumnailImageView.frame.width, height: cell.thumnailImageView.frame.height))
                     
-                    cell.thumnailImageView.kf.setImage(with: URL(string: url),
-                                                       options: [
-                                                        .processor(processor),
-                                                        .scaleFactor(UIScreen.main.scale),
-                                                        .cacheOriginalImage
-                                                       ])
-                    cell.thumnailImageView.contentMode = .scaleAspectFill
-                    cell.mallNameLabel.text = element.mallName
-                    cell.titleLabel.text = element.title.escapingHTML
-                    cell.priceLabel.text = String(price) + "원"
+                    cell.configureCell(url: url, mallName: element.mallName, title: element.title, price: price)
                 }
                 .disposed(by: disposeBag)
+        
+        
+        filteringButtons.forEach { button in
+            let list = button.rx.tap
+                .map {
+                    self.filteringButtons.forEach {
+                        $0.isSelected = false
+                    }
+                }
+                .map { button.tag }
+            
+            list
+                .bind(with: self) { this, tag in
+                    
+                    switch tag {
+                    case 0:
+                        print("0")
+                    case 1:
+                        print("1")
+                    case 2:
+                        print("2")
+                    case 3:
+                        print("3")
+                    default:
+                        print("button title error")
+                        break
+                    }
+                }
+                .disposed(by: disposeBag)
+        }
+        
+        //        switch title {
+        //        case StrokeButton.titleList[0]:
+        //            viewModel.inputQuery.value.2 = 1
+        //            viewModel.inputQuery.value.1 = "sim"
+        //            filteringProcess(button: button)
+        //        case StrokeButton.titleList[1]:
+        //            viewModel.inputQuery.value.2 = 1
+        //            viewModel.inputQuery.value.1  = "date"
+        //            filteringProcess(button: button)
+        //        case StrokeButton.titleList[2]:
+        //            viewModel.inputQuery.value.2 = 1
+        //            viewModel.inputQuery.value.1  = "dsc"
+        //            filteringProcess(button: button)
+        //        case StrokeButton.titleList[3]:
+        //            viewModel.inputQuery.value.2 = 1
+        //            viewModel.inputQuery.value.1  = "asc"
+        //            filteringProcess(button: button)
+        //        default:
+        //            print("title error")
+        //            break
+        //        }
 
         
         //=================이전코드========================
         
-        viewModel.outputRequest.bind { data in
-            // start = 1 일 때 데이터 리로드 하도록
-            self.viewModel.outputReloadAction.value = {
-                self.collectionView.reloadData()
-            }()
-        }
-        
-        viewModel.outputStart.lazyBind { _ in
-            self.collectionView.reloadData()
-        }
+//        viewModel.outputRequest.bind { data in
+//            // start = 1 일 때 데이터 리로드 하도록
+//            self.viewModel.outputReloadAction.value = {
+//                self.collectionView.reloadData()
+//            }()
+//        }
+//        
+//        viewModel.outputStart.lazyBind { _ in
+//            self.collectionView.reloadData()
+//        }
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -111,57 +171,8 @@ final class SearchResultViewController: UIViewController {
         return layout
     }
     
-    @objc
-    func filteringButtonTapped(button: UIButton) {
- 
-//        guard let title = button.titleLabel?.text else { return }
-        
-//        switch title {
-//        case StrokeButton.titleList[0]:
-//            viewModel.inputQuery.value.2 = 1
-//            viewModel.inputQuery.value.1 = "sim"
-//            filteringProcess(button: button)
-//        case StrokeButton.titleList[1]:
-//            viewModel.inputQuery.value.2 = 1
-//            viewModel.inputQuery.value.1  = "date"
-//            filteringProcess(button: button)
-//        case StrokeButton.titleList[2]:
-//            viewModel.inputQuery.value.2 = 1
-//            viewModel.inputQuery.value.1  = "dsc"
-//            filteringProcess(button: button)
-//        case StrokeButton.titleList[3]:
-//            viewModel.inputQuery.value.2 = 1
-//            viewModel.inputQuery.value.1  = "asc"
-//            filteringProcess(button: button)
-//        default:
-//            print("title error")
-//            break
-//        }
-        
-        filteringButtons.forEach {
-            $0.isSelected = false
-        }
-        
-//        let tag = button.tag
-//  
-//        switch tag {
-//        case 0:
-//            
-//        case 1:
-//            
-//        case 2:
-//            
-//        case 3:
-//            
-//        default:
-//            print("button title error")
-//            break
-//        }
-        
-    }
-    
     func filteringProcess(button: UIButton) {
-        viewModel.inputRequest.value = ()
+//        viewModel.inputRequest.value = ()
         scrollToUp()
     }
     
@@ -180,7 +191,7 @@ extension SearchResultViewController: UICollectionViewDataSourcePrefetching {
     
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         
-        viewModel.inputPrefetch.value = (indexPaths)
+//        viewModel.inputPrefetch.value = (indexPaths)
         
 //        for item in indexPaths {
 //            
@@ -242,11 +253,5 @@ extension SearchResultViewController: ShoppingConfigure {
     func configView() {
         view.backgroundColor = .systemBackground
         navigationItem.title = viewModel.keyword
-        
-        for index in 0...3 {
-            filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
-        }
     }
-    
-    
 }
