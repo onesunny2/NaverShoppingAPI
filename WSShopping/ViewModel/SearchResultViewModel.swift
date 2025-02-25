@@ -19,24 +19,15 @@ final class SearchResultViewModel: BaseViewModel {
     struct Output {
         let totalCount: Driver<Int>
         let shoppingDetail: Driver<[ShoppingDetail]>
+        let startPage: Driver<Int>
     }
     
     var disposeBag: DisposeBag = DisposeBag()
+    let buttonTitle = Sort.allCases
     
     let keyword: String
     var sort: String
     var start: Int
-
-    typealias Query = (String, String, Int)
-//    var inputQuery: Observable<Query> = Observable(("", "sim", 1))
-//    let inputRequest: Observable<Void> = Observable(())
-//    let inputPrefetch: Observable<[IndexPath]> = Observable([])
-//    
-//    let outputRequest: Observable<[ShoppingDetail?]> = Observable([])
-//    let outputReloadAction: Observable<Void> = Observable(())
-//    var outputStart: Observable<Int> = Observable(1)
-//    let outputTotal: Observable<Int> = Observable(0)
-//    var outputIsEnd: Observable<Bool> = Observable(false)
     
     init(keyword: String) {
         
@@ -49,6 +40,7 @@ final class SearchResultViewModel: BaseViewModel {
         
         let totalCount = BehaviorRelay(value: 0)
         let shoppingDetail = BehaviorRelay(value: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+        let startPage = BehaviorRelay(value: 1)
         
         // MARK: 화면 진입 시 첫 통신
         AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start))
@@ -74,6 +66,7 @@ final class SearchResultViewModel: BaseViewModel {
                     let sortList = Sort.allCases.map { $0.query }
                     this.sort = sortList[tag]
                     this.start = 1
+                    startPage.accept(this.start)
                     
                     AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
                         .catch { error in
@@ -93,29 +86,12 @@ final class SearchResultViewModel: BaseViewModel {
                 }
                 .disposed(by: disposeBag)
         }
-            
-            
-//            .disposed(by: disposeBag)
+ 
         
         return Output(
             totalCount: totalCount.asDriver(),
-            shoppingDetail: shoppingDetail.asDriver()
+            shoppingDetail: shoppingDetail.asDriver(),
+            startPage: startPage.asDriver()
         )
     }
-    
-//    private func checkPagenation(_ itemCount: Int) {
-//        
-//        let list = outputRequest.value
-//        var start = self.outputStart.value
-//        var end = self.outputIsEnd.value
-//        let total = self.outputTotal.value
-//        
-//        print("list: ", list.count)
-//        if list.count - 5 == itemCount && list.count < total {
-//            start += list.count
-//            print("start: ", start)
-//        } else if list.count >= total {
-//            end = true
-//        }
-//    }
 }

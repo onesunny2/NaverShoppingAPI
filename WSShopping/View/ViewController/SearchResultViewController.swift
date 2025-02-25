@@ -29,9 +29,6 @@ final class SearchResultViewController: UIViewController {
         return stackview
     }()
 
-    
-    let buttonTitle = Sort.allCases
-    
     init(keyword: String) {
         viewModel = SearchResultViewModel(keyword: keyword)
         
@@ -90,71 +87,12 @@ final class SearchResultViewController: UIViewController {
                 }
                 .disposed(by: disposeBag)
         
-        
-        filteringButtons.forEach { button in
-            let list = button.rx.tap
-                .map {
-                    self.filteringButtons.forEach {
-                        $0.isSelected = false
-                    }
-                }
-                .map { button.tag }
-            
-            list
-                .bind(with: self) { this, tag in
-                    
-                    switch tag {
-                    case 0:
-                        print("0")
-                    case 1:
-                        print("1")
-                    case 2:
-                        print("2")
-                    case 3:
-                        print("3")
-                    default:
-                        print("button title error")
-                        break
-                    }
-                }
-                .disposed(by: disposeBag)
-        }
-        
-        //        switch title {
-        //        case StrokeButton.titleList[0]:
-        //            viewModel.inputQuery.value.2 = 1
-        //            viewModel.inputQuery.value.1 = "sim"
-        //            filteringProcess(button: button)
-        //        case StrokeButton.titleList[1]:
-        //            viewModel.inputQuery.value.2 = 1
-        //            viewModel.inputQuery.value.1  = "date"
-        //            filteringProcess(button: button)
-        //        case StrokeButton.titleList[2]:
-        //            viewModel.inputQuery.value.2 = 1
-        //            viewModel.inputQuery.value.1  = "dsc"
-        //            filteringProcess(button: button)
-        //        case StrokeButton.titleList[3]:
-        //            viewModel.inputQuery.value.2 = 1
-        //            viewModel.inputQuery.value.1  = "asc"
-        //            filteringProcess(button: button)
-        //        default:
-        //            print("title error")
-        //            break
-        //        }
-
-        
-        //=================이전코드========================
-        
-//        viewModel.outputRequest.bind { data in
-//            // start = 1 일 때 데이터 리로드 하도록
-//            self.viewModel.outputReloadAction.value = {
-//                self.collectionView.reloadData()
-//            }()
-//        }
-//        
-//        viewModel.outputStart.lazyBind { _ in
-//            self.collectionView.reloadData()
-//        }
+        output.startPage
+            .map { $0 == 1 }
+            .drive(with: self) { this, value in
+                this.collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
+            }
+            .disposed(by: disposeBag)
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -212,9 +150,9 @@ extension SearchResultViewController: ShoppingConfigure {
         for index in 0...3 {
 
             if index == 0 {
-                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: true))
+                filteringButtons.append(StrokeButton(sort: viewModel.buttonTitle[index], isSelected: true))
             } else {
-                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: false))
+                filteringButtons.append(StrokeButton(sort: viewModel.buttonTitle[index], isSelected: false))
             }
             
             filteringButtons[index].tag = index
