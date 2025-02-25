@@ -9,10 +9,13 @@ import UIKit
 import Alamofire
 import Kingfisher
 import SnapKit
+import RxCocoa
+import RxSwift
 
 final class SearchResultViewController: UIViewController {
     
-    let viewModel: SearchResultViewModel
+    private let viewModel: SearchResultViewModel
+    private let disposeBag = DisposeBag()
     
     lazy var resultCountLabel = ResultLabel(title: "", size: 15, weight: .bold, color: .systemGreen)
     var filteringButtons: [UIButton] = []
@@ -27,7 +30,7 @@ final class SearchResultViewController: UIViewController {
     }()
 
     
-    let buttonTitle = StrokeButton.Sort.allCases
+    let buttonTitle = Sort.allCases
     
     init(keyword: String) {
         viewModel = SearchResultViewModel(keyword: keyword)
@@ -49,16 +52,44 @@ final class SearchResultViewController: UIViewController {
         let input = SearchResultViewModel.Input()
         let output = viewModel.transform(input: input)
         
+        output.totalCount
+            .drive(with: self) { this, value in
+                this.resultCountLabel.text = String(value.formatted()) + "개의 검색결과"
+            }
+            .disposed(by: disposeBag)
+        
+        output.shoppingDetail
+            .drive(
+                collectionView.rx.items(
+                    cellIdentifier: SearchResultCollectionViewCell.id,
+                    cellType: SearchResultCollectionViewCell.self
+                )) { (item, element, cell) in
+                    
+                    let url = element.image
+                    let price = Int(element.price)?.formatted() ?? ""
+                    let processor = DownsamplingImageProcessor(size: CGSize(width: cell.thumnailImageView.frame.width, height: cell.thumnailImageView.frame.height))
+                    
+                    cell.thumnailImageView.kf.setImage(with: URL(string: url),
+                                                       options: [
+                                                        .processor(processor),
+                                                        .scaleFactor(UIScreen.main.scale),
+                                                        .cacheOriginalImage
+                                                       ])
+                    cell.thumnailImageView.contentMode = .scaleAspectFill
+                    cell.mallNameLabel.text = element.mallName
+                    cell.titleLabel.text = element.title.escapingHTML
+                    cell.priceLabel.text = String(price) + "원"
+                }
+                .disposed(by: disposeBag)
+
+        
+        //=================이전코드========================
         
         viewModel.outputRequest.bind { data in
             // start = 1 일 때 데이터 리로드 하도록
             self.viewModel.outputReloadAction.value = {
                 self.collectionView.reloadData()
             }()
-        }
-        
-        viewModel.outputTotal.lazyBind { total in
-            self.resultCountLabel.text = String(self.viewModel.outputTotal.value.formatted()) + "개의 검색결과"
         }
         
         viewModel.outputStart.lazyBind { _ in
@@ -145,35 +176,7 @@ final class SearchResultViewController: UIViewController {
 }
 
 // MARK: - collectionView 설정
-extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDataSourcePrefetching {
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.outputRequest.value.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
-        guard let currentArray = viewModel.outputRequest.value[indexPath.row] else { return UICollectionViewCell() }
-        
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchResultCollectionViewCell.id, for: indexPath) as? SearchResultCollectionViewCell else { return UICollectionViewCell() }
-        
-        let url = currentArray.image
-        
-        guard let intPrice = Int(currentArray.price)?.formatted() else { return UICollectionViewCell() }
-        
-        let processor = DownsamplingImageProcessor(size: CGSize(width: cell.thumnailImageView.frame.width, height: cell.thumnailImageView.frame.height))
-        
-        cell.thumnailImageView.kf.setImage(with: URL(string: url),
-                                           options: [.processor(processor),
-                                                     .scaleFactor(UIScreen.main.scale),
-                                                     .cacheOriginalImage])
-        cell.thumnailImageView.contentMode = .scaleAspectFill
-        cell.mallNameLabel.text = currentArray.mallName
-        cell.titleLabel.text = currentArray.title.escapingHTML
-        cell.priceLabel.text = String(intPrice) + "원"
-        
-        return cell
-    }
+extension SearchResultViewController: UICollectionViewDataSourcePrefetching {
     
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         
@@ -194,10 +197,7 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
 // MARK: - 레이아웃 및 속성 설정
 extension SearchResultViewController: ShoppingConfigure {
     func configHierarchy() {
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.prefetchDataSource = self
-        
+
         for index in 0...3 {
 
             if index == 0 {
@@ -241,7 +241,7 @@ extension SearchResultViewController: ShoppingConfigure {
     
     func configView() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = viewModel.inputQuery.value.0
+        navigationItem.title = viewModel.keyword
         
         for index in 0...3 {
             filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)

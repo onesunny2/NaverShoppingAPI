@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class SearchResultCollectionViewCell: UICollectionViewCell {
+final class SearchResultCollectionViewCell: UICollectionViewCell {
     
     static let id = "SearchResultCollectionViewCell"
     

@@ -52,12 +52,20 @@ final class StrokeButton: UIButton {
     }
 }
 
-extension StrokeButton {
     
-    enum Sort: String, CaseIterable {
-        case 정확도
-        case 날짜순
-        case 가격높은순
-        case 가격낮은순
+enum Sort: String, CaseIterable {
+    case 정확도
+    case 날짜순
+    case 가격높은순
+    case 가격낮은순
+    
+    var query: String {
+        switch self {
+        case .정확도: return "sim"
+        case .날짜순: return "date"
+        case .가격높은순: return "dsc"
+        case .가격낮은순: return "asc"
+        }
     }
 }
+

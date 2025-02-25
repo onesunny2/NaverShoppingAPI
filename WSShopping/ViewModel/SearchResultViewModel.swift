@@ -12,18 +12,17 @@ import RxSwift
 final class SearchResultViewModel: BaseViewModel {
     
     struct Input {
-        
+        //
     }
     
     struct Output {
-        
+        let totalCount: Driver<Int>
+        let shoppingDetail: Driver<[ShoppingDetail]>
     }
     
     var disposeBag: DisposeBag = DisposeBag()
     
-    func transform(input: Input) -> Output {
-        return Output()
-    }
+    let keyword: String
 
     typealias Query = (String, String, Int)
     var inputQuery: Observable<Query> = Observable(("", "sim", 1))
@@ -38,7 +37,31 @@ final class SearchResultViewModel: BaseViewModel {
     
     init(keyword: String) {
         
-        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: "sim", start: 1))
+        self.keyword = keyword
+        
+//        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: "sim", start: 1))
+//            .catch { error in
+//                
+//                print("shopping error", error)
+//                
+//                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+//                return Single.just(data)
+//            }
+//            .debug("shopping")
+//            .asObservable()
+//            .bind(with: self) { this, value in
+//                dump(value)
+//            }
+//            .disposed(by: disposeBag)
+    }
+    
+    func transform(input: Input) -> Output {
+        
+        let totalCount = BehaviorRelay(value: 0)
+        let shoppingDetail = BehaviorRelay(value: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+        
+        // MARK: 화면 진입 시 첫 통신
+        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: Sort.정확도.query, start: 1))
             .catch { error in
                 
                 print("shopping error", error)
@@ -49,58 +72,15 @@ final class SearchResultViewModel: BaseViewModel {
             .debug("shopping")
             .asObservable()
             .bind(with: self) { this, value in
-                dump(value)
+                shoppingDetail.accept(value.items)
+                totalCount.accept(value.total)
             }
             .disposed(by: disposeBag)
         
-//        inputQuery.lazyBind { data in
-//            
-//            let keyword = data.0
-//            let sort = data.1
-//            let start = data.2
-//            
-//            print("inputkeyword.bind====", data)
-//            self.getSearchResult(keyword, sort, start)
-//        }
-//        
-//        inputRequest.lazyBind { _ in
-//            let keyword = self.inputQuery.value.0
-//            let sort = self.inputQuery.value.1
-//            let start = self.inputQuery.value.2
-//            
-//            print("inputRequest.bind====", keyword, sort, start)
-//            self.getSearchResult(keyword, sort, start)
-//        }
-//        
-//        inputPrefetch.lazyBind { indexPaths in
-//            
-//            for item in indexPaths {
-//                
-//                self.checkPagenation(item.row)
-//            }
-//        }
-    }
-    
-    private func getSearchResult(_ keyword: String, _ sort: String, _ start: Int) {
-        AlamofireManager.shared.callRequest(Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start)) { result in
-            
-            switch result {
-            case .success(let success):
-
-                self.outputRequest.value = success.items
-
-                if start == 1 {
-                    self.outputTotal.value = success.total
-                    print(self.outputTotal.value)
-                    self.outputReloadAction.value = ()
-                } else {
-                    self.outputRequest.value.append(contentsOf: success.items)
-                }
-
-            case .failure(let failure):
-                print(failure)
-            }
-        }
+        return Output(
+            totalCount: totalCount.asDriver(),
+            shoppingDetail: shoppingDetail.asDriver()
+        )
     }
     
     private func checkPagenation(_ itemCount: Int) {
