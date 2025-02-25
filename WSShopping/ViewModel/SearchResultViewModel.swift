@@ -62,6 +62,7 @@ final class SearchResultViewModel: BaseViewModel {
         // MARK: 전달 받은 버튼의 태그값 활용
         input.buttonTag.forEach { value in
             value
+                .distinctUntilChanged()
                 .bind(with: self) { this, tag in
                     let sortList = Sort.allCases.map { $0.query }
                     this.sort = sortList[tag]
