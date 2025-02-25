@@ -6,9 +6,24 @@
 //
 
 import Foundation
+import RxCocoa
+import RxSwift
 
-
-final class SearchResultViewModel {
+final class SearchResultViewModel: BaseViewModel {
+    
+    struct Input {
+        
+    }
+    
+    struct Output {
+        
+    }
+    
+    var disposeBag: DisposeBag = DisposeBag()
+    
+    func transform(input: Input) -> Output {
+        return Output()
+    }
 
     typealias Query = (String, String, Int)
     var inputQuery: Observable<Query> = Observable(("", "sim", 1))

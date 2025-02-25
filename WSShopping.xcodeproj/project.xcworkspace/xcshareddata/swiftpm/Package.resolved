@@ -1,5 +1,5 @@
 {
-  "originHash" : "ed55cc596a4e4cab36b1d30ff56401dba0b9b1bffeb22a1780c061b42e8d9248",
+  "originHash" : "45451429ca0f11a98b7afda1931e13ca4e3cc6dda37d1e0f4e4391f7a1e3e4e7",
   "pins" : [
     {
       "identity" : "alamofire",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "e6749919f9761d573d37a7d7e78b1b854c191d7f",
         "version" : "8.1.3"
+      }
+    },
+    {
+      "identity" : "rxswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ReactiveX/RxSwift",
+      "state" : {
+        "revision" : "5dd1907d64f0d36f158f61a466bab75067224893",
+        "version" : "6.9.0"
       }
     },
     {

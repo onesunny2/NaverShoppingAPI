@@ -25,33 +25,12 @@ final class SearchResultViewController: UIViewController {
         
         return stackview
     }()
+
     
-//    var start = 1
-//    var keyword = ""
-//    var sortName = "sim"
-//    var total = 0
-//    var isEnd = false
-//    var list: [ShoppingDetail] = [] {
-//        didSet {
-//            self.collectionView.reloadData()
-//        }
-//    }
-    
-    let buttonTitle = StrokeButton.titleList
+    let buttonTitle = StrokeButton.Sort.allCases
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        for index in 0...3 {
-
-            if index == 0 {
-                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: true))
-            } else {
-                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: false))
-            }
-            
-            filteringButtons[index].tag = index
-        }
 
         configHierarchy()
         configLayout()
@@ -90,67 +69,58 @@ final class SearchResultViewController: UIViewController {
         return layout
     }
     
-//    func callRequest() {
-//        
-//        AlamofireManager.shared.getShoppingResult(keyword: keyword, sortName: sortName, start: start) { value in
-//
-//            if self.start == 1 {
-//                self.total = value.total
-//                self.resultCountLabel.text = String(self.total.formatted()) + "개의 검색결과"
-//                self.list = value.items
-//            } else {
-//                self.list.append(contentsOf: value.items)
-//            }
-//        }
-//        
-//    }
-    
     @objc
     func filteringButtonTapped(button: UIButton) {
  
-        guard let title = button.titleLabel?.text else { return }
+//        guard let title = button.titleLabel?.text else { return }
         
-        switch title {
-        case StrokeButton.titleList[0]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1 = "sim"
-            filteringProcess(button: button)
-        case StrokeButton.titleList[1]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1  = "date"
-            filteringProcess(button: button)
-        case StrokeButton.titleList[2]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1  = "dsc"
-            filteringProcess(button: button)
-        case StrokeButton.titleList[3]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1  = "asc"
-            filteringProcess(button: button)
+//        switch title {
+//        case StrokeButton.titleList[0]:
+//            viewModel.inputQuery.value.2 = 1
+//            viewModel.inputQuery.value.1 = "sim"
+//            filteringProcess(button: button)
+//        case StrokeButton.titleList[1]:
+//            viewModel.inputQuery.value.2 = 1
+//            viewModel.inputQuery.value.1  = "date"
+//            filteringProcess(button: button)
+//        case StrokeButton.titleList[2]:
+//            viewModel.inputQuery.value.2 = 1
+//            viewModel.inputQuery.value.1  = "dsc"
+//            filteringProcess(button: button)
+//        case StrokeButton.titleList[3]:
+//            viewModel.inputQuery.value.2 = 1
+//            viewModel.inputQuery.value.1  = "asc"
+//            filteringProcess(button: button)
+//        default:
+//            print("title error")
+//            break
+//        }
+        
+        filteringButtons.forEach {
+            $0.isSelected = false
+        }
+        
+        let tag = button.tag
+  
+        switch tag {
+        case 0:
+            
+        case 1:
+            
+        case 2:
+            
+        case 3:
+            
         default:
-            print("title error")
+            print("button title error")
             break
         }
+        
     }
     
     func filteringProcess(button: UIButton) {
         viewModel.inputRequest.value = ()
-        reloadButtonColor(button: button)
         scrollToUp()
-    }
-    
-    // 새로 생각해본 로직 - 중복되게 안할 수 있는 방법
-    func reloadButtonColor(button: UIButton) {
-        
-        for index in 0...3 {
-            if index == button.tag {
-                filteringButtons[index].configuration?.baseBackgroundColor = .label
-                filteringButtons[index].configuration?.baseForegroundColor = .systemBackground
-            } else {
-                filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
-                filteringButtons[index].configuration?.baseForegroundColor = .label
-            }
-        }
     }
     
     func scrollToUp() {
@@ -246,6 +216,17 @@ extension SearchResultViewController: ShoppingConfigure {
     func configView() {
         view.backgroundColor = .systemBackground
         navigationItem.title = viewModel.inputQuery.value.0
+        
+        for index in 0...3 {
+
+            if index == 0 {
+                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: true))
+            } else {
+                filteringButtons.append(StrokeButton(sort: buttonTitle[index], isSelected: false))
+            }
+            
+            filteringButtons[index].tag = index
+        }
         
         for index in 0...3 {
             filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
