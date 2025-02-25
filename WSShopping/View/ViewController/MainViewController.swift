@@ -50,7 +50,8 @@ final class MainViewController: UIViewController {
                 self.defaultLabel.text = self.viewModel.name(.InvalidText)
                 
                 let vc = SearchResultViewController()
-                vc.keyword = self.viewModel.inputSearchText.value ?? ""
+                vc.viewModel.inputQuery.value.0 = self.viewModel.inputSearchText.value ?? ""
+                print(vc.viewModel.inputQuery.value.0)
                 self.navigationController?.pushViewController(vc, animated: true)
             }
             

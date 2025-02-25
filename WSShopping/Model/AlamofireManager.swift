@@ -8,30 +8,64 @@
 import UIKit
 import Alamofire
 
-class AlamofireManager {
+final class AlamofireManager {
     
     static let shared = AlamofireManager()
     
     private init() { }
     
-    func getShoppingResult(keyword: String, sortName: String, start: Int, completionHandler: @escaping (Shopping) -> (Void)) {
+    func callRequest<T: Decodable>(_ type: T.Type, api: ApiUrl,  completionHandler: @escaping (Result<T, AFError>) -> ()) {
         
-        let url = "https://openapi.naver.com/v1/search/shop.json?query=\(keyword)&display=30&sort=\(sortName)&start=\(start)"
+//        AF.request(
+//            api.baseUrl,
+//            method: api.method,
+//            parameters: api.parameters,
+//            encoding: URLEncoding(destination: .queryString),
+//            headers: api.header
+//        ).responseString { result in
+//            print(result)
+//        }
         
-        let headers = HTTPHeaders(["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret])
-        
-        AF.request(url, method: .get, headers: headers).responseString { value in
-            dump(value)
-        }
-        
-        AF.request(url, method: .get, headers: headers).responseDecodable(of: Shopping.self) { response in
+        AF.request(
+            api.baseUrl,
+            method: api.method,
+            parameters: api.parameters,
+            encoding: URLEncoding(destination: .queryString),
+            headers: api.header
+        ).responseDecodable(of: T.self) { response in
             
             switch response.result {
             case .success(let value):
-                completionHandler(value)
-                
+                completionHandler(.success(value))
             case .failure(let error):
-                print("error", error)
+                completionHandler(.failure(error))
+            }
+        }
+        
+    }
+}
+
+extension AlamofireManager {
+    
+    enum ApiUrl {
+        case shopping(keyword: String, sortName: String, start: Int)
+        
+        var method: HTTPMethod {
+            return .get
+        }
+        
+        var header: HTTPHeaders {
+            return ["X-Naver-Client-Id": APIKey.clientID, "X-Naver-Client-Secret": APIKey.clientSecret]
+        }
+        
+        var baseUrl: String {
+            return "https://openapi.naver.com/v1/search/shop.json"
+        }
+        
+        var parameters: Parameters {
+            switch self {
+            case let .shopping(keyword, sortName, start):
+                return ["query": keyword, "display": 30, "sort": sortName, "start": start]
             }
         }
     }

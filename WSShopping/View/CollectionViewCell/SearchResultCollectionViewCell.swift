@@ -37,6 +37,15 @@ class SearchResultCollectionViewCell: UICollectionViewCell {
         thumnailImageView.layer.cornerRadius = 15
         thumnailImageView.clipsToBounds = true
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        thumnailImageView.image = UIImage()
+        mallNameLabel.text = ""
+        titleLabel.text = ""
+        priceLabel.text = ""
+    }
 
 }
 
