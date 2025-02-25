@@ -56,8 +56,6 @@ final class SearchResultViewController: UIViewController {
         configHierarchy()
         configLayout()
         configView()
-        
-//        callRequest()
         bindData()
     }
     
@@ -71,6 +69,10 @@ final class SearchResultViewController: UIViewController {
         
         viewModel.outputTotal.lazyBind { total in
             self.resultCountLabel.text = String(self.viewModel.outputTotal.value.formatted()) + "개의 검색결과"
+        }
+        
+        viewModel.outputStart.lazyBind { _ in
+            self.collectionView.reloadData()
         }
     }
     
@@ -193,8 +195,6 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
         viewModel.inputPrefetch.value = (indexPaths)
         
 //        for item in indexPaths {
-//            
-////            viewModel.inputPrefetch.value = ()
 //            
 //            if list.count - 5 == item.row && list.count < self.total {
 //                start += list.count

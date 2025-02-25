@@ -17,8 +17,9 @@ final class SearchResultViewModel {
     
     let outputRequest: Observable<[ShoppingDetail?]> = Observable([])
     let outputReloadAction: Observable<Void> = Observable(())
+    var outputStart: Observable<Int> = Observable(1)
     let outputTotal: Observable<Int> = Observable(0)
-    let outputIsEnd: Observable<Bool> = Observable(false)
+    var outputIsEnd: Observable<Bool> = Observable(false)
     
     init() {
         
@@ -43,12 +44,9 @@ final class SearchResultViewModel {
         
         inputPrefetch.lazyBind { indexPaths in
             
-            let total = self.outputTotal.value
-            let end = self.outputIsEnd.value
-            
             for item in indexPaths {
                 
-                self.checkPagenation(item.row, total, end)
+                self.checkPagenation(item.row)
             }
         }
     }
@@ -68,21 +66,24 @@ final class SearchResultViewModel {
                 } else {
                     self.outputRequest.value.append(contentsOf: success.items)
                 }
-                
+
             case .failure(let failure):
                 print(failure)
             }
         }
     }
     
-    private func checkPagenation(_ itemCount: Int, _ total: Int, _ end: Bool) {
+    private func checkPagenation(_ itemCount: Int) {
         
         let list = outputRequest.value
-        var start = self.inputQuery.value.2
+        var start = self.outputStart.value
         var end = self.outputIsEnd.value
+        let total = self.outputTotal.value
         
+        print("list: ", list.count)
         if list.count - 5 == itemCount && list.count < total {
             start += list.count
+            print("start: ", start)
         } else if list.count >= total {
             end = true
         }
