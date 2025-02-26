@@ -14,12 +14,14 @@ struct Shopping: Decodable {
 
 struct ShoppingDetail: Decodable {
     let title: String
+    let link: String
     let image: String
     let price: String
     let mallName: String
     
     enum CodingKeys: String, CodingKey {
         case title
+        case link
         case image
         case price = "lprice"
         case mallName
