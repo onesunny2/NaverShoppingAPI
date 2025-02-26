@@ -21,6 +21,7 @@ final class MainViewModel: BaseViewModel {
     struct Input {
         let tappedSearchButton: ControlEvent<Void>
         let searchKeyword: ControlProperty<String?>
+        let tappedBarButtonItem: ControlEvent<Void>
     }
     
     struct Output {

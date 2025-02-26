@@ -18,6 +18,7 @@ final class MainViewController: UIViewController {
     private let searchbar = UISearchBar()
     private let defaultImage = UIImageView()
     private let defaultLabel = UILabel()
+    private let rightBarItem = UIBarButtonItem(image: UIImage(systemName: "list.star"))
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,7 +46,8 @@ final class MainViewController: UIViewController {
         
         let input = MainViewModel.Input(
             tappedSearchButton: searchbar.rx.searchButtonClicked,
-            searchKeyword: searchbar.rx.text
+            searchKeyword: searchbar.rx.text,
+            tappedBarButtonItem: rightBarItem.rx.tap
         )
         let output = viewModel.transform(input: input)
 
@@ -68,6 +70,13 @@ final class MainViewController: UIViewController {
                 
                 this.searchbar.text = ""
                 this.view.endEditing(true)
+            }
+            .disposed(by: disposeBag)
+        
+        rightBarItem.rx.tap
+            .bind(with: self) { this, _ in
+                let vc = WishListViewController()
+                this.navigationController?.pushViewController(vc, animated: true)
             }
             .disposed(by: disposeBag)
     }
@@ -106,6 +115,7 @@ extension MainViewController: ShoppingConfigure {
         navigationItem.backButtonTitle = ""
         navigationController?.navigationBar.tintColor = .label
         navigationItem.title = HomeContent.title
+        navigationItem.rightBarButtonItem = rightBarItem
         
         searchbar.searchBarStyle = .minimal
         searchbar.placeholder = HomeContent.placeholder
