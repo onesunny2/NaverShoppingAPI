@@ -29,9 +29,9 @@ final class SearchResultViewModel: BaseViewModel {
     let buttonTitle = Sort.allCases
     
     let keyword: String
-    var sort: String
-    var start: Int
-    var isEnd: Bool
+    private var sort: String
+    private var start: Int
+    private var isEnd: Bool
     
     init(keyword: String) {
         
@@ -114,10 +114,10 @@ final class SearchResultViewModel: BaseViewModel {
  
         input.prefetchIndexPath
             .bind(with: self) { this, indexPaths in
-                print("result.count===", results.count)
+                
                 for item in indexPaths {
                     if (results.count - 6 == item.item) && results.count < totalCount.value && !this.isEnd {
-                        this.start += results.count
+                        this.start += 30
                         
                         print("totalCount===", totalCount)
                         print("start===", this.start)
