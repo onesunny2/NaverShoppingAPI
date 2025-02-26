@@ -14,12 +14,13 @@ final class BaseUITextField: UITextField {
         
         let placeHolder = "사고싶은 물건을 입력해보세요!"
         
-        self.attributedPlaceholder = NSAttributedString(string: placeHolder, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .medium), NSAttributedString.Key.foregroundColor: UIColor.darkGray])
+        self.attributedPlaceholder = NSAttributedString(string: placeHolder, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .medium), NSAttributedString.Key.foregroundColor: UIColor.lightGray])
         self.keyboardType = .default
         self.clearButtonMode = .whileEditing
         self.borderStyle = .roundedRect
         self.autocapitalizationType = .none
         self.autocorrectionType = .no
+        self.backgroundColor = .systemGray6.withAlphaComponent(0.5)
     }
     
     
