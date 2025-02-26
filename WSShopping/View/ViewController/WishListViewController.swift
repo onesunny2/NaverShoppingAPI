@@ -41,6 +41,8 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
         let product = WishProduct(name: keyword)
         wishList.append(product)
         updateSnapshot()
+        
+        textfield.text = ""
     }
  
     private func configureDataSource() {
@@ -86,6 +88,15 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
     }
 }
 
+extension WishListViewController: UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        wishList.remove(at: indexPath.item)
+        updateSnapshot()
+    }
+}
+
 extension WishListViewController {
     
     // MARK: collectionview layout
@@ -104,6 +115,7 @@ extension WishListViewController {
         navigationItem.title = "위시리스트"
         collectionView.keyboardDismissMode = .onDrag
         textfield.delegate = self
+        collectionView.delegate = self
         
         view.addSubview(textfield)
         textfield.snp.makeConstraints { make in
