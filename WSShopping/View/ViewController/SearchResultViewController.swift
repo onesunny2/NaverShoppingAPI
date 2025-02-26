@@ -63,7 +63,8 @@ final class SearchResultViewController: UIViewController {
         }
         
         let input = SearchResultViewModel.Input(
-            buttonTag: buttons
+            buttonTag: buttons,
+            prefetchIndexPath: collectionView.rx.prefetchItems
         )
         let output = viewModel.transform(input: input)
         
@@ -87,10 +88,18 @@ final class SearchResultViewController: UIViewController {
                 }
                 .disposed(by: disposeBag)
         
-        output.startPage
-            .map { $0 == 1 }
-            .drive(with: self) { this, value in
-                this.collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
+        // TODO: 스크롤 업 타이밍 잡는 시점은 어디로...?
+//        output.startPage
+//            .map { $0 == 1 }
+//            .drive(with: self) { this, value in
+// 
+//                this.collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
+//            }
+//            .disposed(by: disposeBag)
+        
+        output.errorMessage
+            .drive(with: self) { this, message in
+                this.alertError(message: message)
             }
             .disposed(by: disposeBag)
     }
@@ -107,15 +116,6 @@ final class SearchResultViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 2, left: sectionInsect, bottom: 2, right: sectionInsect)
         
         return layout
-    }
-    
-    func filteringProcess(button: UIButton) {
-//        viewModel.inputRequest.value = ()
-        scrollToUp()
-    }
-    
-    func scrollToUp() {
-        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
     }
 
     @available(*, unavailable)

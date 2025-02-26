@@ -20,4 +20,13 @@ extension UIViewController {
         present(message, animated: true)
         
     }
+    
+    func alertError(message: String) {
+        let message = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        
+        let okay = UIAlertAction(title: "확인", style: .cancel)
+        message.addAction(okay)
+        
+        present(message, animated: true)
+    }
 }
