@@ -47,7 +47,7 @@ final class SearchResultViewModel: BaseViewModel {
         
         let totalCount = BehaviorRelay(value: 0)
         let shoppingDetail = BehaviorRelay(value: results)
-        let startPage = BehaviorRelay(value: 1)
+        let startPage = PublishRelay<Int>()
         let errorMessage = PublishRelay<String>()
         
         // MARK: 화면 진입 시 첫 통신
@@ -87,8 +87,7 @@ final class SearchResultViewModel: BaseViewModel {
                     let sortList = Sort.allCases.map { $0.query }
                     this.sort = sortList[tag]
                     this.start = 1
-                    
-                    this.group.enter()
+
                     AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
                         .catch { error in
                             
@@ -106,18 +105,13 @@ final class SearchResultViewModel: BaseViewModel {
                             shoppingDetail.accept(results)
                             totalCount.accept(value.total)
                             
-                            this.group.leave()
+                            startPage.accept(this.start)
                         }
                         .disposed(by: this.disposeBag)
                 }
                 .disposed(by: disposeBag)
         }
-        
-        group.notify(queue: .main) {
-            startPage.accept(self.start)
-        }
  
-        // MARK: Pagenation (왜 작동을 안할까?)
         input.prefetchIndexPath
             .bind(with: self) { this, indexPaths in
                 print("result.count===", results.count)
@@ -159,7 +153,7 @@ final class SearchResultViewModel: BaseViewModel {
         return Output(
             totalCount: totalCount.asDriver(),
             shoppingDetail: shoppingDetail.asDriver(),
-            startPage: startPage.asDriver(),
+            startPage: startPage.asDriver(onErrorJustReturn: 1),
             errorMessage: errorMessage
         )
     }

@@ -88,14 +88,13 @@ final class SearchResultViewController: UIViewController {
                 }
                 .disposed(by: disposeBag)
         
-        // TODO: 스크롤 업 타이밍 잡는 시점은 어디로...?
-//        output.startPage
-//            .map { $0 == 1 }
-//            .drive(with: self) { this, value in
-// 
-//                this.collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
-//            }
-//            .disposed(by: disposeBag)
+        output.startPage
+            .map { $0 == 1 }
+            .debug("scroll")
+            .drive(with: self, onNext: { this, value in
+                this.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: false)
+            })
+            .disposed(by: disposeBag)
         
         output.errorMessage
             .bind(with: self) { this, message in
