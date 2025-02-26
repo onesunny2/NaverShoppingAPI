@@ -98,7 +98,7 @@ final class SearchResultViewController: UIViewController {
 //            .disposed(by: disposeBag)
         
         output.errorMessage
-            .drive(with: self) { this, message in
+            .bind(with: self) { this, message in
                 this.alertError(message: message)
             }
             .disposed(by: disposeBag)

@@ -21,7 +21,7 @@ final class SearchResultViewModel: BaseViewModel {
         let totalCount: Driver<Int>
         let shoppingDetail: Driver<[ShoppingDetail]>
         let startPage: Driver<Int>
-        let errorMessage: Driver<String>
+        let errorMessage: PublishRelay<String>
     }
     
     var disposeBag: DisposeBag = DisposeBag()
@@ -48,7 +48,7 @@ final class SearchResultViewModel: BaseViewModel {
         let totalCount = BehaviorRelay(value: 0)
         let shoppingDetail = BehaviorRelay(value: results)
         let startPage = BehaviorRelay(value: 1)
-        let errorMessage = BehaviorRelay(value: "")
+        let errorMessage = PublishRelay<String>()
         
         // MARK: 화면 진입 시 첫 통신
         AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start))
@@ -160,7 +160,7 @@ final class SearchResultViewModel: BaseViewModel {
             totalCount: totalCount.asDriver(),
             shoppingDetail: shoppingDetail.asDriver(),
             startPage: startPage.asDriver(),
-            errorMessage: errorMessage.asDriver()
+            errorMessage: errorMessage
         )
     }
 }
