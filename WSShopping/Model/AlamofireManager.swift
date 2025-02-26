@@ -5,7 +5,9 @@
 //  Created by Lee Wonsun on 1/16/25.
 //
 
-import UIKit
+import Foundation
+import RxSwift
+import RxCocoa
 import Alamofire
 
 final class AlamofireManager {
@@ -13,6 +15,33 @@ final class AlamofireManager {
     static let shared = AlamofireManager()
     
     private init() { }
+    
+    func callRequestByObservable<T: Decodable>(type: T.Type, api: ApiUrl) -> Single<T> {
+        
+        return Single<T>.create { value in
+            
+            AF.request(
+                api.baseUrl,
+                method: api.method,
+                parameters: api.parameters,
+                encoding: URLEncoding(destination: .queryString),
+                headers: api.header
+            ).responseDecodable(of: T.self) { response in
+                
+                switch response.result {
+                case .success(let result):
+                    value(.success(result))
+                case .failure(let error):
+                    value(.failure(error))
+                }
+            }
+            
+            return Disposables.create {
+                print("통신 끝")
+            }
+        }
+        
+    }
     
     func callRequest<T: Decodable>(_ type: T.Type, api: ApiUrl,  completionHandler: @escaping (Result<T, AFError>) -> ()) {
         

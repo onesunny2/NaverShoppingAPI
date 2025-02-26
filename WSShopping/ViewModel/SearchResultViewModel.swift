@@ -6,86 +6,155 @@
 //
 
 import Foundation
+import RxCocoa
+import RxSwift
 
-
-final class SearchResultViewModel {
-
-    typealias Query = (String, String, Int)
-    var inputQuery: Observable<Query> = Observable(("", "sim", 1))
-    let inputRequest: Observable<Void> = Observable(())
-    let inputPrefetch: Observable<[IndexPath]> = Observable([])
+final class SearchResultViewModel: BaseViewModel {
     
-    let outputRequest: Observable<[ShoppingDetail?]> = Observable([])
-    let outputReloadAction: Observable<Void> = Observable(())
-    var outputStart: Observable<Int> = Observable(1)
-    let outputTotal: Observable<Int> = Observable(0)
-    var outputIsEnd: Observable<Bool> = Observable(false)
+    struct Input {
+        // 필터링 버튼의 태그를 전달받기 (버튼탭을 통해서)
+        let buttonTag: [Observable<Int>]
+        let prefetchIndexPath: ControlEvent<[IndexPath]>
+    }
     
-    init() {
+    struct Output {
+        let totalCount: Driver<Int>
+        let shoppingDetail: Driver<[ShoppingDetail]>
+        let startPage: Driver<Int>
+        let errorMessage: PublishRelay<String>
+    }
+    
+    var disposeBag: DisposeBag = DisposeBag()
+    private let group = DispatchGroup()
+    let buttonTitle = Sort.allCases
+    
+    let keyword: String
+    private var sort: String
+    private var start: Int
+    private var isEnd: Bool
+    
+    init(keyword: String) {
         
-        inputQuery.lazyBind { data in
-            
-            let keyword = data.0
-            let sort = data.1
-            let start = data.2
-            
-            print("inputkeyword.bind====", data)
-            self.getSearchResult(keyword, sort, start)
-        }
+        self.keyword = keyword
+        self.sort = Sort.정확도.query
+        self.start = 1
+        self.isEnd = false
+    }
+    
+    func transform(input: Input) -> Output {
         
-        inputRequest.lazyBind { _ in
-            let keyword = self.inputQuery.value.0
-            let sort = self.inputQuery.value.1
-            let start = self.inputQuery.value.2
-            
-            print("inputRequest.bind====", keyword, sort, start)
-            self.getSearchResult(keyword, sort, start)
-        }
+        var results: [ShoppingDetail] = []
         
-        inputPrefetch.lazyBind { indexPaths in
-            
-            for item in indexPaths {
+        let totalCount = BehaviorRelay(value: 0)
+        let shoppingDetail = BehaviorRelay(value: results)
+        let startPage = PublishRelay<Int>()
+        let errorMessage = PublishRelay<String>()
+        
+        // MARK: 화면 진입 시 첫 통신
+        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start))
+            .catch { error in
                 
-                self.checkPagenation(item.row)
-            }
-        }
-    }
-    
-    private func getSearchResult(_ keyword: String, _ sort: String, _ start: Int) {
-        AlamofireManager.shared.callRequest(Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start)) { result in
-            
-            switch result {
-            case .success(let success):
-
-                self.outputRequest.value = success.items
-
-                if start == 1 {
-                    self.outputTotal.value = success.total
-                    print(self.outputTotal.value)
-                    self.outputReloadAction.value = ()
-                } else {
-                    self.outputRequest.value.append(contentsOf: success.items)
+                switch error as? ShoppingError {
+                case .invalidURL: errorMessage.accept(ShoppingError.invalidURL.message)
+                case let .statudError(code): errorMessage.accept(ShoppingError.statudError(code: code).message)
+                case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse.message)
+                default:
+                    print("잘못된 에러")
+                    break
                 }
-
-            case .failure(let failure):
-                print(failure)
+                
+                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+                return Single.just(data)
             }
-        }
-    }
-    
-    private func checkPagenation(_ itemCount: Int) {
+            .debug("shopping")
+            .asObservable()
+            .bind(with: self) { this, value in
+                results.append(contentsOf: value.items)
+                
+                shoppingDetail.accept(results)
+                totalCount.accept(value.total)
+            }
+            .disposed(by: disposeBag)
         
-        let list = outputRequest.value
-        var start = self.outputStart.value
-        var end = self.outputIsEnd.value
-        let total = self.outputTotal.value
-        
-        print("list: ", list.count)
-        if list.count - 5 == itemCount && list.count < total {
-            start += list.count
-            print("start: ", start)
-        } else if list.count >= total {
-            end = true
+        // MARK: 필터링 - 전달 받은 버튼의 태그값 활용
+        input.buttonTag.forEach { value in
+            value
+                .distinctUntilChanged()
+                .bind(with: self) { this, tag in
+                    
+                    results = []
+                    
+                    let sortList = Sort.allCases.map { $0.query }
+                    this.sort = sortList[tag]
+                    this.start = 1
+
+                    AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
+                        .catch { error in
+                            
+                            print("shopping error", error)
+                            
+                            let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+                            return Single.just(data)
+                        }
+                        .debug("shopping")
+                        .asObservable()
+                        .bind(with: self) { this, value in
+                            
+                            results.append(contentsOf: value.items)
+                            
+                            shoppingDetail.accept(results)
+                            totalCount.accept(value.total)
+                            
+                            startPage.accept(this.start)
+                        }
+                        .disposed(by: this.disposeBag)
+                }
+                .disposed(by: disposeBag)
         }
+ 
+        input.prefetchIndexPath
+            .bind(with: self) { this, indexPaths in
+                
+                for item in indexPaths {
+                    if (results.count - 6 == item.item) && results.count < totalCount.value && !this.isEnd {
+                        this.start += 30
+                        
+                        print("totalCount===", totalCount)
+                        print("start===", this.start)
+                        print("isEnd===", this.isEnd)
+                        
+                        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
+                            .catch { error in
+                                
+                                print("shopping error", error)
+                                
+                                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+                                return Single.just(data)
+                            }
+                            .debug("shopping")
+                            .asObservable()
+                            .bind(with: self) { this, value in
+                                
+                                results.append(contentsOf: value.items)
+                                
+                                shoppingDetail.accept(results)
+                                totalCount.accept(value.total)
+                                
+                                if results.count >= value.total {
+                                    this.isEnd = true
+                                }
+                            }
+                            .disposed(by: this.disposeBag)
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        return Output(
+            totalCount: totalCount.asDriver(),
+            shoppingDetail: shoppingDetail.asDriver(),
+            startPage: startPage.asDriver(onErrorJustReturn: 1),
+            errorMessage: errorMessage
+        )
     }
 }

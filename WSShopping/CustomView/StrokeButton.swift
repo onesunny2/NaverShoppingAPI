@@ -7,32 +7,65 @@
 
 import UIKit
 
-class StrokeButton: UIButton {
+final class StrokeButton: UIButton {
     
-    static let titleList = ["정확도", "날짜순", "가격높은순", "가격낮은순"]
+    override var isSelected: Bool {
+        didSet {
+
+            self.configuration?.baseBackgroundColor = isSelected ? .label : .systemBackground
+            self.configuration?.baseForegroundColor = isSelected ? .systemBackground : .label
+
+        }
+    }
+
+    init(sort: Sort, isSelected: Bool) {
+        super.init(frame: .zero)
+        
+        self.isSelected = isSelected
+        configButton(sort: sort)
+    }
     
-    func configButton(title: String, isTapped: Bool) {
+    private func configButton(sort: Sort) {
         
         let container = AttributeContainer().font(.systemFont(ofSize: 14, weight: .regular))
         
         var config = Configuration.filled()
         config.cornerStyle = .medium
-        config.title = title
-        config.attributedTitle = AttributedString(title, attributes: container)
-        config.baseBackgroundColor = isTapped ? .label : .systemBackground
+        config.attributedTitle = AttributedString(sort.rawValue, attributes: container)
+        config.baseBackgroundColor = isSelected ? .label : .systemBackground
         config.background.strokeColor = .label
         config.background.strokeWidth = 1
-        config.baseForegroundColor = isTapped ? .systemBackground : .label
+        config.baseForegroundColor = isSelected ? .systemBackground : .label
         
         self.configuration = config
     }
-
-    init(title: String, isTapped: Bool) {
-        super.init(frame: .zero)
-        configButton(title: title, isTapped: isTapped)
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        
+        isSelected.toggle()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+    
+enum Sort: String, CaseIterable {
+    case 정확도
+    case 날짜순
+    case 가격높은순
+    case 가격낮은순
+    
+    var query: String {
+        switch self {
+        case .정확도: return "sim"
+        case .날짜순: return "date"
+        case .가격높은순: return "dsc"
+        case .가격낮은순: return "asc"
+        }
+    }
+}
+

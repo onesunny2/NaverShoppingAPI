@@ -7,26 +7,32 @@
 
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 final class MainViewController: UIViewController {
     
     private let viewModel = MainViewModel()
+    private let disposeBag = DisposeBag()
     
     private let searchbar = UISearchBar()
     private let defaultImage = UIImageView()
     private let defaultLabel = UILabel()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        view.addGestureRecognizer(tap)
-
         configHierarchy()
         configLayout()
         defaultContent()
         configView()
         bindData()
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        
+        view.endEditing(true)
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -37,52 +43,40 @@ final class MainViewController: UIViewController {
     
     private func bindData() {
         
-        viewModel.outputCheckValid.lazyBind { isValid in
-            
-            if !isValid {
-                self.defaultImage.image = UIImage(named: self.viewModel.name(.inValidImage))
-                self.defaultLabel.text = self.viewModel.name(.InvalidText)
-                self.alertWordCount(message: "2글자 이상 입력해주세요!") {
-                    UIAlertAction(title: "확인", style: .cancel)
+        let input = MainViewModel.Input(
+            tappedSearchButton: searchbar.rx.searchButtonClicked,
+            searchKeyword: searchbar.rx.text
+        )
+        let output = viewModel.transform(input: input)
+
+        output.isValid
+            .drive(with: self) { this, value in
+                switch value {
+                case true:
+                    this.defaultImage.image = UIImage(named: this.viewModel.name(.validImage))
+                    this.defaultLabel.text = this.viewModel.name(.InvalidText)
+                    
+                    let vc = SearchResultViewController(keyword: this.searchbar.text ?? "")
+                    this.navigationController?.pushViewController(vc, animated: true)
+                case false:
+                    this.defaultImage.image = UIImage(named: this.viewModel.name(.inValidImage))
+                    this.defaultLabel.text = this.viewModel.name(.InvalidText)
+                    this.alertWordCount(message: "2글자 이상 입력해주세요!") {
+                        UIAlertAction(title: "확인", style: .cancel)
+                    }
                 }
-            } else {
-                self.defaultImage.image = UIImage(named: self.viewModel.name(.validImage))
-                self.defaultLabel.text = self.viewModel.name(.InvalidText)
                 
-                let vc = SearchResultViewController()
-                vc.viewModel.inputQuery.value.0 = self.viewModel.inputSearchText.value ?? ""
-                print(vc.viewModel.inputQuery.value.0)
-                self.navigationController?.pushViewController(vc, animated: true)
+                this.searchbar.text = ""
+                this.view.endEditing(true)
             }
-            
-            self.searchbar.text = ""
-            self.view.endEditing(true)
-        }
-    }
-    
-    @objc
-    func dismissKeyboard() {
-        view.endEditing(true)
-    }
-    
-
-}
-
-// MARK: - 서치바 관련 액션
-extension MainViewController: UISearchBarDelegate {
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        
-        viewModel.inputSearchText.value = searchBar.text
+            .disposed(by: disposeBag)
     }
 }
-
 
 // MARK: - 레이아웃 및 속성 설정
 extension MainViewController: ShoppingConfigure {
     func configHierarchy() {
-        searchbar.delegate = self
-    
+        
         view.addSubview(searchbar)
         view.addSubview(defaultImage)
         view.addSubview(defaultLabel)

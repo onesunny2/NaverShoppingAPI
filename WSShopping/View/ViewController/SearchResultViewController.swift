@@ -9,10 +9,13 @@ import UIKit
 import Alamofire
 import Kingfisher
 import SnapKit
+import RxCocoa
+import RxSwift
 
 final class SearchResultViewController: UIViewController {
     
-    let viewModel = SearchResultViewModel()
+    private let viewModel: SearchResultViewModel
+    private let disposeBag = DisposeBag()
     
     lazy var resultCountLabel = ResultLabel(title: "", size: 15, weight: .bold, color: .systemGreen)
     var filteringButtons: [UIButton] = []
@@ -25,33 +28,15 @@ final class SearchResultViewController: UIViewController {
         
         return stackview
     }()
-    
-//    var start = 1
-//    var keyword = ""
-//    var sortName = "sim"
-//    var total = 0
-//    var isEnd = false
-//    var list: [ShoppingDetail] = [] {
-//        didSet {
-//            self.collectionView.reloadData()
-//        }
-//    }
-    
-    let buttonTitle = StrokeButton.titleList
+
+    init(keyword: String) {
+        viewModel = SearchResultViewModel(keyword: keyword)
+        
+        super.init(nibName: nil, bundle: nil)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        for index in 0...3 {
-
-            if index == 0 {
-                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: true))
-            } else {
-                filteringButtons.append(StrokeButton(title: buttonTitle[index], isTapped: false))
-            }
-            
-            filteringButtons[index].tag = index
-        }
 
         configHierarchy()
         configLayout()
@@ -60,20 +45,62 @@ final class SearchResultViewController: UIViewController {
     }
     
     private func bindData() {
-        viewModel.outputRequest.bind { data in
-            // start = 1 일 때 데이터 리로드 하도록
-            self.viewModel.outputReloadAction.value = {
-                self.collectionView.reloadData()
-            }()
+        
+        var buttons: [Observable<Int>] = []
+        
+        for index in 0...3 {
+            let list = filteringButtons[index].rx.tap
+                .withUnretained(self)
+                .map { this, _ in
+                    this.filteringButtons.forEach {
+                        $0.isSelected = false
+                    }
+                    
+                    return this.filteringButtons[index].tag
+                }
+            
+            buttons.append(list)
         }
         
-        viewModel.outputTotal.lazyBind { total in
-            self.resultCountLabel.text = String(self.viewModel.outputTotal.value.formatted()) + "개의 검색결과"
-        }
+        let input = SearchResultViewModel.Input(
+            buttonTag: buttons,
+            prefetchIndexPath: collectionView.rx.prefetchItems
+        )
+        let output = viewModel.transform(input: input)
         
-        viewModel.outputStart.lazyBind { _ in
-            self.collectionView.reloadData()
-        }
+        output.totalCount
+            .drive(with: self) { this, value in
+                this.resultCountLabel.text = String(value.formatted()) + "개의 검색결과"
+            }
+            .disposed(by: disposeBag)
+        
+        output.shoppingDetail
+            .drive(
+                collectionView.rx.items(
+                    cellIdentifier: SearchResultCollectionViewCell.id,
+                    cellType: SearchResultCollectionViewCell.self
+                )) { (item, element, cell) in
+                    
+                    let url = element.image
+                    let price = Int(element.price)?.formatted() ?? ""
+                    
+                    cell.configureCell(url: url, mallName: element.mallName, title: element.title, price: price)
+                }
+                .disposed(by: disposeBag)
+        
+        output.startPage
+            .map { $0 == 1 }
+            .debug("scroll")
+            .drive(with: self, onNext: { this, value in
+                this.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: false)
+            })
+            .disposed(by: disposeBag)
+        
+        output.errorMessage
+            .bind(with: self) { this, message in
+                this.alertError(message: message)
+            }
+            .disposed(by: disposeBag)
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -89,110 +116,19 @@ final class SearchResultViewController: UIViewController {
         
         return layout
     }
-    
-//    func callRequest() {
-//        
-//        AlamofireManager.shared.getShoppingResult(keyword: keyword, sortName: sortName, start: start) { value in
-//
-//            if self.start == 1 {
-//                self.total = value.total
-//                self.resultCountLabel.text = String(self.total.formatted()) + "개의 검색결과"
-//                self.list = value.items
-//            } else {
-//                self.list.append(contentsOf: value.items)
-//            }
-//        }
-//        
-//    }
-    
-    @objc
-    func filteringButtonTapped(button: UIButton) {
- 
-        guard let title = button.titleLabel?.text else { return }
-        
-        switch title {
-        case StrokeButton.titleList[0]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1 = "sim"
-            filteringProcess(button: button)
-        case StrokeButton.titleList[1]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1  = "date"
-            filteringProcess(button: button)
-        case StrokeButton.titleList[2]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1  = "dsc"
-            filteringProcess(button: button)
-        case StrokeButton.titleList[3]:
-            viewModel.inputQuery.value.2 = 1
-            viewModel.inputQuery.value.1  = "asc"
-            filteringProcess(button: button)
-        default:
-            print("title error")
-            break
-        }
-    }
-    
-    func filteringProcess(button: UIButton) {
-        viewModel.inputRequest.value = ()
-        reloadButtonColor(button: button)
-        scrollToUp()
-    }
-    
-    // 새로 생각해본 로직 - 중복되게 안할 수 있는 방법
-    func reloadButtonColor(button: UIButton) {
-        
-        for index in 0...3 {
-            if index == button.tag {
-                filteringButtons[index].configuration?.baseBackgroundColor = .label
-                filteringButtons[index].configuration?.baseForegroundColor = .systemBackground
-            } else {
-                filteringButtons[index].configuration?.baseBackgroundColor = .systemBackground
-                filteringButtons[index].configuration?.baseForegroundColor = .label
-            }
-        }
-    }
-    
-    func scrollToUp() {
-        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
-    }
 
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 // MARK: - collectionView 설정
-extension SearchResultViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDataSourcePrefetching {
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.outputRequest.value.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
-        guard let currentArray = viewModel.outputRequest.value[indexPath.row] else { return UICollectionViewCell() }
-        
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchResultCollectionViewCell.id, for: indexPath) as? SearchResultCollectionViewCell else { return UICollectionViewCell() }
-        
-        let url = currentArray.image
-        
-        guard let intPrice = Int(currentArray.price)?.formatted() else { return UICollectionViewCell() }
-        
-        let processor = DownsamplingImageProcessor(size: CGSize(width: cell.thumnailImageView.frame.width, height: cell.thumnailImageView.frame.height))
-        
-        cell.thumnailImageView.kf.setImage(with: URL(string: url),
-                                           options: [.processor(processor),
-                                                     .scaleFactor(UIScreen.main.scale),
-                                                     .cacheOriginalImage])
-        cell.thumnailImageView.contentMode = .scaleAspectFill
-        cell.mallNameLabel.text = currentArray.mallName
-        cell.titleLabel.text = currentArray.title.escapingHTML
-        cell.priceLabel.text = String(intPrice) + "원"
-        
-        return cell
-    }
+extension SearchResultViewController: UICollectionViewDataSourcePrefetching {
     
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         
-        viewModel.inputPrefetch.value = (indexPaths)
+//        viewModel.inputPrefetch.value = (indexPaths)
         
 //        for item in indexPaths {
 //            
@@ -209,9 +145,17 @@ extension SearchResultViewController: UICollectionViewDelegate, UICollectionView
 // MARK: - 레이아웃 및 속성 설정
 extension SearchResultViewController: ShoppingConfigure {
     func configHierarchy() {
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.prefetchDataSource = self
+
+        for index in 0...3 {
+
+            if index == 0 {
+                filteringButtons.append(StrokeButton(sort: viewModel.buttonTitle[index], isSelected: true))
+            } else {
+                filteringButtons.append(StrokeButton(sort: viewModel.buttonTitle[index], isSelected: false))
+            }
+            
+            filteringButtons[index].tag = index
+        }
         
         view.addSubview(resultCountLabel)
         view.addSubview(filterStackview)
@@ -245,12 +189,6 @@ extension SearchResultViewController: ShoppingConfigure {
     
     func configView() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = viewModel.inputQuery.value.0
-        
-        for index in 0...3 {
-            filteringButtons[index].addTarget(self, action: #selector(filteringButtonTapped), for: .touchUpInside)
-        }
+        navigationItem.title = viewModel.keyword
     }
-    
-    
 }

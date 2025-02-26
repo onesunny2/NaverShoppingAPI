@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import RxSwift
+import RxCocoa
 
 enum HomeContents: String {
     case validImage = "shopping"
@@ -14,35 +16,45 @@ enum HomeContents: String {
     case InvalidText = "2글자 이상으로 검색해주세요!"
 }
 
-final class MainViewModel {
+final class MainViewModel: BaseViewModel {
     
-    let inputSearchText: Observable<String?> = Observable("")
-    
-    let outputCheckValid: Observable<Bool> = Observable(true)
-    
-    init() {
-        
-        inputSearchText.lazyBind { [weak self] text in
-            self?.checkKeywordValid()
-        }
+    struct Input {
+        let tappedSearchButton: ControlEvent<Void>
+        let searchKeyword: ControlProperty<String?>
     }
     
-    private func checkKeywordValid() {
+    struct Output {
+        let isValid: Driver<Bool>
+    }
+    
+    var disposeBag: DisposeBag = DisposeBag()
+    
+    func transform(input: Input) -> Output {
         
-        guard let keyword = inputSearchText.value else {
-            print("keyword nil")
-            return
-        }
+        let isValid = PublishRelay<Bool>()
         
-        switch keyword.count {
-        case ..<2:
-            outputCheckValid.value = false
-        case 2...:
-            outputCheckValid.value = true
-        default:
-            print("\(keyword.count) error")
-            break
-        }
+        input.tappedSearchButton
+            .debug("Before UntilChanged")
+            .withLatestFrom(input.searchKeyword)
+            .distinctUntilChanged()
+            .compactMap { $0 }
+            .debug("After UntilChanged")
+            .bind(with: self) { this, keyword in
+                switch keyword.count {
+                case ..<2:
+                    isValid.accept(false)
+                case 2...:
+                    isValid.accept(true)
+                default:
+                    print("keyword error")
+                    break
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        return Output(
+            isValid: isValid.asDriver(onErrorJustReturn: false)
+        )
     }
 }
 
