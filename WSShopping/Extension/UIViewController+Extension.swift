@@ -21,10 +21,13 @@ extension UIViewController {
         
     }
     
-    func alertError(message: String) {
-        let message = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+    func alertError(title: String, message: String) {
+        let message = UIAlertController(title: title, message: message, preferredStyle: .alert)
         
-        let okay = UIAlertAction(title: "확인", style: .cancel)
+        let okay = UIAlertAction(title: "확인", style: .cancel) { [weak self] _ in
+            guard let self else { return }
+            self.navigationController?.popViewController(animated: true)
+        }
         message.addAction(okay)
         
         present(message, animated: true)
