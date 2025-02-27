@@ -32,7 +32,14 @@ final class AlamofireManager {
                 case .success(let result):
                     value(.success(result))
                 case .failure(let error):
-                    value(.failure(error))
+
+                    guard let statusCode = response.response?.statusCode else {
+                        value(.failure(ShoppingError.unknownResponse))
+                        return
+                    }
+                    switch statusCode {
+                    default: value(.failure(ShoppingError.statudError(code: statusCode, message: error.localizedDescription)))
+                    }
                 }
             }
             
