@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4314DDAC2D6D8FB3007EBA65 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 4314DDAB2D6D8FB3007EBA65 /* RxCocoa */; };
 		4314DDAE2D6D8FB3007EBA65 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4314DDAD2D6D8FB3007EBA65 /* RxSwift */; };
+		4314E0032D6F39D3007EBA65 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4314E0022D6F39D3007EBA65 /* WebKit.framework */; };
 		4350E1502D37947F00670D84 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 4350E14F2D37947F00670D84 /* .gitignore */; };
 		4350E17F2D379F8400670D84 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4350E17E2D379F8400670D84 /* SnapKit */; };
 		4350E1822D379F9A00670D84 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 4350E1812D379F9A00670D84 /* Alamofire */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4314E0022D6F39D3007EBA65 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		4350E1372D3793F800670D84 /* WSShopping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WSShopping.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4350E14F2D37947F00670D84 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -46,6 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4314E0032D6F39D3007EBA65 /* WebKit.framework in Frameworks */,
 				4350E1852D379FAA00670D84 /* Kingfisher in Frameworks */,
 				4350E17F2D379F8400670D84 /* SnapKit in Frameworks */,
 				4314DDAE2D6D8FB3007EBA65 /* RxSwift in Frameworks */,
@@ -57,11 +60,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4314E0012D6F39D3007EBA65 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4314E0022D6F39D3007EBA65 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		4350E12E2D3793F800670D84 = {
 			isa = PBXGroup;
 			children = (
 				4350E14F2D37947F00670D84 /* .gitignore */,
 				4350E1392D3793F800670D84 /* WSShopping */,
+				4314E0012D6F39D3007EBA65 /* Frameworks */,
 				4350E1382D3793F800670D84 /* Products */,
 			);
 			sourceTree = "<group>";
