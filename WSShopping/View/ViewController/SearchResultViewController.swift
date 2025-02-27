@@ -98,8 +98,8 @@ final class SearchResultViewController: UIViewController {
             .disposed(by: disposeBag)
         
         output.errorMessage
-            .bind(with: self) { this, message in
-                this.alertError(message: message)
+            .bind(with: self) { this, errorCode in
+                this.alertError(title: errorCode.title, message: errorCode.message)
             }
             .disposed(by: disposeBag)
         

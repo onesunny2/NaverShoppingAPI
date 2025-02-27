@@ -43,7 +43,7 @@ final class DetailWebViewViewController: UIViewController, WKNavigationDelegate 
     private func configure() {
         view.addSubview(webView)
         webView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalTo(view.safeAreaLayoutGuide)
         }
     }
     

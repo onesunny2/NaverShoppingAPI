@@ -22,7 +22,7 @@ final class SearchResultViewModel: BaseViewModel {
         let totalCount: Driver<Int>
         let shoppingDetail: Driver<[ShoppingDetail]>
         let startPage: Driver<Int>
-        let errorMessage: PublishRelay<String>
+        let errorMessage: PublishRelay<ShoppingError>
         let webView: Driver<DetailWebViewViewController>
     }
     
@@ -50,7 +50,7 @@ final class SearchResultViewModel: BaseViewModel {
         let totalCount = BehaviorRelay(value: 0)
         let shoppingDetail = BehaviorRelay(value: results)
         let startPage = PublishRelay<Int>()
-        let errorMessage = PublishRelay<String>()
+        let errorMessage = PublishRelay<ShoppingError>()
         let webView = PublishRelay<DetailWebViewViewController>()
         
         // MARK: 화면 진입 시 첫 통신
@@ -58,9 +58,9 @@ final class SearchResultViewModel: BaseViewModel {
             .catch { error in
                 
                 switch error as? ShoppingError {
-                case .invalidURL: errorMessage.accept(ShoppingError.invalidURL.message)
-                case let .statudError(code): errorMessage.accept(ShoppingError.statudError(code: code).message)
-                case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse.message)
+                case .invalidURL: errorMessage.accept(ShoppingError.invalidURL)
+                case let .statudError(code, message): errorMessage.accept(ShoppingError.statudError(code: code, message: message))
+                case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse)
                 default:
                     print("잘못된 에러")
                     break
@@ -94,7 +94,14 @@ final class SearchResultViewModel: BaseViewModel {
                     AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
                         .catch { error in
                             
-                            print("shopping error", error)
+                            switch error as? ShoppingError {
+                            case .invalidURL: errorMessage.accept(ShoppingError.invalidURL)
+                            case let .statudError(code, message): errorMessage.accept(ShoppingError.statudError(code: code, message: message))
+                            case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse)
+                            default:
+                                print("잘못된 에러")
+                                break
+                            }
                             
                             let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
                             return Single.just(data)
@@ -122,14 +129,17 @@ final class SearchResultViewModel: BaseViewModel {
                     if (results.count - 6 == item.item) && results.count < totalCount.value && !this.isEnd {
                         this.start += 30
                         
-                        print("totalCount===", totalCount)
-                        print("start===", this.start)
-                        print("isEnd===", this.isEnd)
-                        
                         AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
                             .catch { error in
                                 
-                                print("shopping error", error)
+                                switch error as? ShoppingError {
+                                case .invalidURL: errorMessage.accept(ShoppingError.invalidURL)
+                                case let .statudError(code, message): errorMessage.accept(ShoppingError.statudError(code: code, message: message))
+                                case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse)
+                                default:
+                                    print("잘못된 에러")
+                                    break
+                                }
                                 
                                 let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
                                 return Single.just(data)
