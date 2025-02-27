@@ -15,6 +15,7 @@ final class SearchResultViewModel: BaseViewModel {
         // 필터링 버튼의 태그를 전달받기 (버튼탭을 통해서)
         let buttonTag: [Observable<Int>]
         let prefetchIndexPath: ControlEvent<[IndexPath]>
+        let tappedProduct: ControlEvent<ShoppingDetail>
     }
     
     struct Output {
@@ -22,6 +23,7 @@ final class SearchResultViewModel: BaseViewModel {
         let shoppingDetail: Driver<[ShoppingDetail]>
         let startPage: Driver<Int>
         let errorMessage: PublishRelay<String>
+        let webView: Driver<DetailWebViewViewController>
     }
     
     var disposeBag: DisposeBag = DisposeBag()
@@ -49,6 +51,7 @@ final class SearchResultViewModel: BaseViewModel {
         let shoppingDetail = BehaviorRelay(value: results)
         let startPage = PublishRelay<Int>()
         let errorMessage = PublishRelay<String>()
+        let webView = PublishRelay<DetailWebViewViewController>()
         
         // MARK: 화면 진입 시 첫 통신
         AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start))
@@ -63,7 +66,7 @@ final class SearchResultViewModel: BaseViewModel {
                     break
                 }
                 
-                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
                 return Single.just(data)
             }
             .debug("shopping")
@@ -93,7 +96,7 @@ final class SearchResultViewModel: BaseViewModel {
                             
                             print("shopping error", error)
                             
-                            let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+                            let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
                             return Single.just(data)
                         }
                         .debug("shopping")
@@ -128,7 +131,7 @@ final class SearchResultViewModel: BaseViewModel {
                                 
                                 print("shopping error", error)
                                 
-                                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", image: "", price: "", mallName: "")])
+                                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
                                 return Single.just(data)
                             }
                             .debug("shopping")
@@ -150,11 +153,20 @@ final class SearchResultViewModel: BaseViewModel {
             }
             .disposed(by: disposeBag)
         
+        input.tappedProduct
+            .map { $0.link }
+            .bind(with: self) { this, url in
+                let vc = DetailWebViewViewController(url: url)
+                webView.accept(vc)
+            }
+            .disposed(by: disposeBag)
+        
         return Output(
             totalCount: totalCount.asDriver(),
             shoppingDetail: shoppingDetail.asDriver(),
             startPage: startPage.asDriver(onErrorJustReturn: 1),
-            errorMessage: errorMessage
+            errorMessage: errorMessage,
+            webView: webView.asDriver(onErrorJustReturn: DetailWebViewViewController(url: ""))
         )
     }
 }

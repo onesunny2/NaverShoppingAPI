@@ -64,7 +64,8 @@ final class SearchResultViewController: UIViewController {
         
         let input = SearchResultViewModel.Input(
             buttonTag: buttons,
-            prefetchIndexPath: collectionView.rx.prefetchItems
+            prefetchIndexPath: collectionView.rx.prefetchItems,
+            tappedProduct: collectionView.rx.modelSelected(ShoppingDetail.self)
         )
         let output = viewModel.transform(input: input)
         
@@ -101,6 +102,12 @@ final class SearchResultViewController: UIViewController {
                 this.alertError(message: message)
             }
             .disposed(by: disposeBag)
+        
+        output.webView
+            .drive(with: self) { this, vc in
+                this.navigationController?.pushViewController(vc, animated: true)
+            }
+            .disposed(by: disposeBag)
     }
     
     func collectionViewLayout() -> UICollectionViewFlowLayout {
@@ -120,25 +127,6 @@ final class SearchResultViewController: UIViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-}
-
-// MARK: - collectionView 설정
-extension SearchResultViewController: UICollectionViewDataSourcePrefetching {
-    
-    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
-        
-//        viewModel.inputPrefetch.value = (indexPaths)
-        
-//        for item in indexPaths {
-//            
-//            if list.count - 5 == item.row && list.count < self.total {
-//                start += list.count
-//                callRequest()
-//            } else if list.count >= self.total {  // 좀 더 죻은 방법 찾아보기
-//                isEnd = true
-//            }
-//        }
     }
 }
 
@@ -176,7 +164,7 @@ extension SearchResultViewController: ShoppingConfigure {
         filterStackview.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide).inset(40)
             $0.leading.equalTo(view.safeAreaLayoutGuide).inset(10)
-            $0.width.equalTo(UIScreen.main.bounds.size.width * 0.85)
+//            $0.width.equalTo(UIScreen.main.bounds.size.width * 0.85)
             $0.height.equalTo(35)
         }
         
