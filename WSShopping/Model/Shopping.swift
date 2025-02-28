@@ -13,6 +13,7 @@ struct Shopping: Decodable {
 }
 
 struct ShoppingDetail: Decodable {
+    let id: String
     let title: String
     let link: String
     let image: String
@@ -20,6 +21,7 @@ struct ShoppingDetail: Decodable {
     let mallName: String
     
     enum CodingKeys: String, CodingKey {
+        case id = "productId"
         case title
         case link
         case image
