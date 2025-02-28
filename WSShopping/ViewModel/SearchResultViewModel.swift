@@ -149,7 +149,7 @@ extension SearchResultViewModel {
                     break
                 }
                 
-                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
+                let data = Shopping(total: 0, items: [ShoppingDetail(id: "", title: "", link: "", image: "", price: "", mallName: "")])
                 return Single.just(data)
             }
             .debug("shopping")

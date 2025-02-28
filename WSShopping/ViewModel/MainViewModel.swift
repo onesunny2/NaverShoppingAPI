@@ -37,7 +37,6 @@ final class MainViewModel: BaseViewModel {
         input.tappedSearchButton
             .debug("Before UntilChanged")
             .withLatestFrom(input.searchKeyword)
-            .distinctUntilChanged()
             .compactMap { $0 }
             .debug("After UntilChanged")
             .bind(with: self) { this, keyword in
