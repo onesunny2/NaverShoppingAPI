@@ -52,25 +52,9 @@ final class SearchResultViewModel: BaseViewModel {
         let startPage = PublishRelay<Int>()
         let errorMessage = PublishRelay<ShoppingError>()
         let webView = PublishRelay<DetailWebViewViewController>()
-        
+ 
         // MARK: 화면 진입 시 첫 통신
-        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start))
-            .catch { error in
-                
-                switch error as? ShoppingError {
-                case .invalidURL: errorMessage.accept(ShoppingError.invalidURL)
-                case let .statudError(code, message): errorMessage.accept(ShoppingError.statudError(code: code, message: message))
-                case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse)
-                default:
-                    print("잘못된 에러")
-                    break
-                }
-                
-                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
-                return Single.just(data)
-            }
-            .debug("shopping")
-            .asObservable()
+        getNetworkResult(errorMessage: errorMessage, keyword: keyword, sort: sort, start: start)
             .bind(with: self) { this, value in
                 results.append(contentsOf: value.items)
                 
@@ -91,23 +75,7 @@ final class SearchResultViewModel: BaseViewModel {
                     this.sort = sortList[tag]
                     this.start = 1
 
-                    AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
-                        .catch { error in
-                            
-                            switch error as? ShoppingError {
-                            case .invalidURL: errorMessage.accept(ShoppingError.invalidURL)
-                            case let .statudError(code, message): errorMessage.accept(ShoppingError.statudError(code: code, message: message))
-                            case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse)
-                            default:
-                                print("잘못된 에러")
-                                break
-                            }
-                            
-                            let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
-                            return Single.just(data)
-                        }
-                        .debug("shopping")
-                        .asObservable()
+                    this.getNetworkResult(errorMessage: errorMessage, keyword: this.keyword, sort: this.sort, start: this.start)
                         .bind(with: self) { this, value in
                             
                             results.append(contentsOf: value.items)
@@ -129,23 +97,7 @@ final class SearchResultViewModel: BaseViewModel {
                     if (results.count - 6 == item.item) && results.count < totalCount.value && !this.isEnd {
                         this.start += 30
                         
-                        AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: this.keyword, sortName: this.sort, start: this.start))
-                            .catch { error in
-                                
-                                switch error as? ShoppingError {
-                                case .invalidURL: errorMessage.accept(ShoppingError.invalidURL)
-                                case let .statudError(code, message): errorMessage.accept(ShoppingError.statudError(code: code, message: message))
-                                case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse)
-                                default:
-                                    print("잘못된 에러")
-                                    break
-                                }
-                                
-                                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
-                                return Single.just(data)
-                            }
-                            .debug("shopping")
-                            .asObservable()
+                        this.getNetworkResult(errorMessage: errorMessage, keyword: this.keyword, sort: this.sort, start: this.start)
                             .bind(with: self) { this, value in
                                 
                                 results.append(contentsOf: value.items)
@@ -178,5 +130,31 @@ final class SearchResultViewModel: BaseViewModel {
             errorMessage: errorMessage,
             webView: webView.asDriver(onErrorJustReturn: DetailWebViewViewController(url: ""))
         )
+    }
+}
+
+extension SearchResultViewModel {
+    
+    private func getNetworkResult(errorMessage: PublishRelay<ShoppingError>, keyword: String, sort: String, start: Int) -> Observable<Shopping> {
+        
+        let network = AlamofireManager.shared.callRequestByObservable(type: Shopping.self, api: .shopping(keyword: keyword, sortName: sort, start: start))
+            .catch { error in
+                
+                switch error as? ShoppingError {
+                case .invalidURL: errorMessage.accept(ShoppingError.invalidURL)
+                case let .statudError(code, message): errorMessage.accept(ShoppingError.statudError(code: code, message: message))
+                case .unknownResponse: errorMessage.accept(ShoppingError.unknownResponse)
+                default:
+                    print("잘못된 에러")
+                    break
+                }
+                
+                let data = Shopping(total: 0, items: [ShoppingDetail(title: "", link: "", image: "", price: "", mallName: "")])
+                return Single.just(data)
+            }
+            .debug("shopping")
+            .asObservable()
+        
+        return network
     }
 }
