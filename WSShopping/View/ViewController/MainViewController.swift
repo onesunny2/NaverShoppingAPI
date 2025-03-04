@@ -24,6 +24,8 @@ final class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        print(RealmManager.shared.checkDefaultRealmLocation())
+        
         configHierarchy()
         configLayout()
         defaultContent()

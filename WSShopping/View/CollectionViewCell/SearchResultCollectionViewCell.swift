@@ -15,6 +15,9 @@ final class SearchResultCollectionViewCell: UICollectionViewCell {
     
     static let id = "SearchResultCollectionViewCell"
     
+    private let realm = RealmManager.shared
+    private lazy var list = realm.read(WishRealmList.self)
+    
     private var disposeBag = DisposeBag()
     
     let thumnailImageView = UIImageView()
@@ -88,7 +91,7 @@ extension SearchResultCollectionViewCell {
         }
     }
     
-    func configureCell(url: String, mallName: String, title: String, price: String, id: String) {
+    func configureCell(row: Int, url: String, mallName: String, title: String, price: String, id: String) {
         let processor = DownsamplingImageProcessor(size: CGSize(width: thumnailImageView.frame.width, height: thumnailImageView.frame.height))
         
         thumnailImageView.kf.setImage(with: URL(string: url),
@@ -103,13 +106,39 @@ extension SearchResultCollectionViewCell {
         
         mallNameLabel.text = mallName
         titleLabel.text = title.escapingHTML
-        priceLabel.text = price + "원"
+        
+        let stringPrice = Int(price)?.formatted() ?? ""
+        priceLabel.text = stringPrice + "원"
         
         @HeartDefaults(key: .좋아요(id: id), empty: false) var isLiked
         
         heartbutton.rx.tap
             .bind(with: self, onNext: { this, _ in
                 isLiked = isLiked ? false : true
+                
+                let data = WishRealmList(
+                    id: id,
+                    imageURL: url,
+                    mallName: mallName,
+                    title: title,
+                    price: Int(price) ?? 0,
+                    isLiked: this.heartbutton.isSelected
+                )
+                
+                
+                
+                let result = this.list.filter { $0.id == id }
+                
+                guard !result.isEmpty else {
+                    // id가 비었을때 = 아직 저장된 데이터 없을 때 새롭게 저장
+                    this.realm.create(data)
+                    return
+                }
+                
+                // id가 있을 때 = 기존 값 갈아줘야 함
+                let value = [QueryName.id.rawValue: id,  QueryName.isLiked.rawValue: this.heartbutton.isSelected]
+                this.realm.update(WishRealmList.self, value: value)
+               
             })
             .disposed(by: disposeBag)
         

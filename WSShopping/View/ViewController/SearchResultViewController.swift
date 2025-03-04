@@ -83,9 +83,8 @@ final class SearchResultViewController: UIViewController {
                 )) { (item, element, cell) in
                     
                     let url = element.image
-                    let price = Int(element.price)?.formatted() ?? ""
                     
-                    cell.configureCell(url: url, mallName: element.mallName, title: element.title, price: price, id: element.id)
+                    cell.configureCell(row: item, url: url, mallName: element.mallName, title: element.title, price: element.price, id: element.id)
                 
                 }
                 .disposed(by: disposeBag)
