@@ -19,6 +19,7 @@ final class MainViewController: UIViewController {
     private let defaultImage = UIImageView()
     private let defaultLabel = UILabel()
     private let rightBarItem = UIBarButtonItem(image: UIImage(systemName: "list.star"))
+    private let leftBarItem = UIBarButtonItem(image: UIImage(systemName: "heart.fill"))
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -79,6 +80,13 @@ final class MainViewController: UIViewController {
                 this.navigationController?.pushViewController(vc, animated: true)
             }
             .disposed(by: disposeBag)
+        
+        leftBarItem.rx.tap
+            .bind(with: self) { this, _ in
+                let vc = WishRealmListViewController()
+                this.navigationController?.pushViewController(vc, animated: true)
+            }
+            .disposed(by: disposeBag)
     }
 }
 
@@ -116,6 +124,7 @@ extension MainViewController: ShoppingConfigure {
         navigationController?.navigationBar.tintColor = .label
         navigationItem.title = HomeContent.title
         navigationItem.rightBarButtonItem = rightBarItem
+        navigationItem.leftBarButtonItem = leftBarItem
         
         searchbar.searchBarStyle = .minimal
         searchbar.placeholder = HomeContent.placeholder
