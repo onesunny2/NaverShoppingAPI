@@ -27,3 +27,12 @@ final class WishRealmList: Object {
         self.isLiked = isLiked
     }
 }
+
+enum QueryName: String {
+    case id
+    case imageURL
+    case mallName
+    case title
+    case price
+    case isLiked
+}
