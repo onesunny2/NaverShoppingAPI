@@ -44,13 +44,26 @@ extension WishRealmListViewController: ShoppingConfigure {
     }
     
     func configView() {
-        view.backgroundColor = .clear
+        view.backgroundColor = .white
         
         navigationItem.title = "좋아요 목록"
+        
+        let sortMenu = UIMenu(title: "정렬하기", options: .displayInline, children: configMenuItems())
+        let rightBarbuttonItem = UIBarButtonItem(title: "정렬", primaryAction: nil, menu: sortMenu)
+        navigationItem.rightBarButtonItem = rightBarbuttonItem
+        
         searchbar.searchBarStyle = .minimal
         searchbar.placeholder = "좋아요를 누른 상품을 검색해 보세요"
         
-        collectionView.backgroundColor = .systemPink
+        collectionView.backgroundColor = .clear
+    }
+    
+    private func configMenuItems() -> [UIAction] {
+        return [
+            UIAction(title: "이름순", handler: { _ in print("이름순") }),
+            UIAction(title: "가격순", handler: { _ in print("가격순") }),
+            UIAction(title: "최신순", handler: { _ in print("최신순") })
+        ]
     }
     
     private func collectionViewLayout() -> UICollectionViewFlowLayout {
