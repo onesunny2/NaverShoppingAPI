@@ -26,6 +26,8 @@ final class SearchResultCollectionViewCell: UICollectionViewCell {
     lazy var priceLabel = ResultLabel(title: "", size: 15, weight: .semibold, color: .label)
     var heartbutton = CustomHeartButton(false)
     
+    var tappedHeart: (() -> ())?
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -91,7 +93,7 @@ extension SearchResultCollectionViewCell {
         }
     }
     
-    func configureCell(row: Int, url: String, mallName: String, title: String, price: String, id: String) {
+    func configureCell(url: String, mallName: String, title: String, price: String, id: String) {
         let processor = DownsamplingImageProcessor(size: CGSize(width: thumnailImageView.frame.width, height: thumnailImageView.frame.height))
         
         thumnailImageView.kf.setImage(with: URL(string: url),
@@ -125,8 +127,6 @@ extension SearchResultCollectionViewCell {
                     isLiked: this.heartbutton.isSelected
                 )
                 
-                
-                
                 let result = this.list.filter { $0.id == id }
                 
                 guard !result.isEmpty else {
@@ -136,9 +136,10 @@ extension SearchResultCollectionViewCell {
                 }
                 
                 // id가 있을 때 = 기존 값 갈아줘야 함
-                let value = [QueryName.id.rawValue: id,  QueryName.isLiked.rawValue: this.heartbutton.isSelected]
+                let value = [QueryName.id.rawValue: id, QueryName.isLiked.rawValue: this.heartbutton.isSelected]
                 this.realm.update(WishRealmList.self, value: value)
                
+                this.tappedHeart?()
             })
             .disposed(by: disposeBag)
         

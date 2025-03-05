@@ -7,8 +7,21 @@
 
 import UIKit
 import SnapKit
+import RxCocoa
+import RxSwift
+import RealmSwift
+
+/*
+ 데이터가 false로는 바뀌는데 왜 안빠지는지
+ */
 
 final class WishRealmListViewController: UIViewController {
+    
+    private let realm = RealmManager.shared
+    var list: Results<WishRealmList>!
+    var currentLists: [WishRealmList] = []
+    
+    private let disposeBag = DisposeBag()
     
     private let searchbar = UISearchBar()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionViewLayout())
@@ -16,11 +29,106 @@ final class WishRealmListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        list = realm.read(WishRealmList.self)
+        currentLists = list.filter { $0.isLiked }
+        
         configHierarchy()
         configLayout()
         configView()
+        
+        bind()
+    }
+    
+    private func bind() {
+        
+//        var newList = list?.filter { $0.isLiked }
+ 
+        collectionView.register(SearchResultCollectionViewCell.self, forCellWithReuseIdentifier: SearchResultCollectionViewCell.id)
+        
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        searchbar.delegate = self
+        
+       /* BehaviorRelay(value: newList)
+            .compactMap { $0 }
+            .bind(to: collectionView.rx.items(
+                cellIdentifier: SearchResultCollectionViewCell.id,
+                cellType: SearchResultCollectionViewCell.self
+            )) { item, element, cell in
+                
+                cell.configureCell(
+                    url: element.imageURL,
+                    mallName: element.mallName,
+                    title: element.title,
+                    price: String(element.price),
+                    id: element.id
+                )
+                
+                // MARK: reloadData가 안먹히는 이유
+                cell.tappedHeart = {
+                    self.collectionView.reloadData()
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        // MARK:
+        searchbar.rx.text.orEmpty
+            .map { text in
+                let value = self.list?.where {
+                    $0.title.contains(text, options: .caseInsensitive)
+                }.filter { $0.isLiked }
+                
+                return value
+            }
+            .bind(with: self) { this, value in
+                newList = value
+                this.collectionView.reloadData()
+            }
+            .disposed(by: disposeBag) */
     }
  
+}
+
+extension WishRealmListViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return currentLists.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        let data = currentLists[indexPath.item]
+        
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchResultCollectionViewCell.id, for: indexPath) as? SearchResultCollectionViewCell else { return UICollectionViewCell() }
+        
+        cell.configureCell(url: data.imageURL, mallName: data.mallName, title: data.title, price: String(data.price), id: data.id)
+        
+        cell.tappedHeart = {
+            // MARK: Results 타입을 사용하는데 왜 바로 데이터가 안바뀔까
+            self.currentLists = self.list.filter { $0.isLiked }
+            self.collectionView.reloadData()
+        }
+        
+        return cell
+    }
+}
+
+extension WishRealmListViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        guard searchText.count > 0 else {
+            currentLists = list.filter { $0.isLiked }
+            collectionView.reloadData()
+            return
+        }
+        
+        currentLists = list.filter {
+            $0.title.contains(searchText) ||
+            $0.mallName.contains(searchText)
+        }
+        
+        collectionView.reloadData()
+    }
 }
 
 extension WishRealmListViewController: ShoppingConfigure {
