@@ -38,11 +38,11 @@ final class RealmManager: BaseRealm {
     }
     
     // Update
-    func update<T: Object>(_ object: T, completion: @escaping ((T) -> ()))  {
+    func update<T: Object>(_ object: T.Type, value: [String: Any])  {
         
         do {
             try realm.write {
-                completion(object)
+                realm.create(object, value: value, update: .modified)
             }
         } catch {
             print("realm update error")
