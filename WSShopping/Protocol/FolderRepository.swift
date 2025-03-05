@@ -9,5 +9,5 @@ import Foundation
 import RealmSwift
 
 protocol FolderRepository: AnyObject {
-    func createItemInFolder(foler: WishFolderTable)
+    func createItemInFolder(_ object: WishListTable, folder: WishFolderTable)
 }

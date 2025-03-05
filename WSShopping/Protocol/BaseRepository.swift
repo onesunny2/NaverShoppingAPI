@@ -8,10 +8,10 @@
 import Foundation
 import RealmSwift
 
-protocol BaseRepository: AnyObject {
+protocol BaseRepository: AnyObject, FolderRepository {
     func getFileURL()
-    func fetchAll<T: Object>() -> Results<T>
-    func createItem()
+    func fetchAll<T: Object>(_ object: T.Type) -> Results<T>
+    func createItem<T: Object>(_ object: T)
     func deleteItem<T: Object>(_ object: T)
     func updateItem<T: Object>(_ object: T.Type, value: [String: Any])
 }
