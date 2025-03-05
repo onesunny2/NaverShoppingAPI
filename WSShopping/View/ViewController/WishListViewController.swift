@@ -17,10 +17,22 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
     private let textfield = BaseUITextField()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionviewLayout())
     
-    private var dataSource: UICollectionViewDiffableDataSource<WishSection, WishProduct>?
+    private var dataSource: UICollectionViewDiffableDataSource<WishSection, WishListTable>?
     
-    private var wishList: [WishProduct] = []
-
+    var wishList: [WishListTable] = []
+    var navigationTitle: String
+    
+    init(title: String) {
+        self.navigationTitle = title
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -38,7 +50,7 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
         
         guard let keyword = textfield.text else { return }
         
-        let product = WishProduct(name: keyword)
+        let product = WishListTable(wishName: keyword, regDate: Date())
         wishList.append(product)
         updateSnapshot()
         
@@ -47,13 +59,13 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
  
     private func configureDataSource() {
         
-        let registration = UICollectionView.CellRegistration<UICollectionViewListCell, WishProduct> { cell, indexPath, item in
+        let registration = UICollectionView.CellRegistration<UICollectionViewListCell, WishListTable> { cell, indexPath, item in
             
             var content = UIListContentConfiguration.accompaniedSidebarSubtitleCell()
-            content.text = item.name
+            content.text = item.wishName
             content.textProperties.color = .label
             content.textProperties.font = .systemFont(ofSize: 16, weight: .semibold)
-            content.secondaryText = item.date.dateToString()
+            content.secondaryText = item.regDate.dateToString()
             content.secondaryTextProperties.color = .darkGray
             content.secondaryTextProperties.font = .systemFont(ofSize: 13, weight: .medium)
             content.image = UIImage(systemName: "checkmark.square")
@@ -80,7 +92,7 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
     
     private func updateSnapshot() {
         
-        var snapshot = NSDiffableDataSourceSnapshot<WishSection, WishProduct>()
+        var snapshot = NSDiffableDataSourceSnapshot<WishSection, WishListTable>()
         snapshot.appendSections(WishSection.allCases)
         snapshot.appendItems(wishList, toSection: WishSection.first)
         
@@ -112,7 +124,7 @@ extension WishListViewController {
     
     private func configureView() {
         view.backgroundColor = .white
-        navigationItem.title = "위시리스트"
+        navigationItem.title = navigationTitle
         collectionView.keyboardDismissMode = .onDrag
         textfield.delegate = self
         collectionView.delegate = self

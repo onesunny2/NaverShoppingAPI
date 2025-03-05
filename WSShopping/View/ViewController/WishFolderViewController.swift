@@ -15,6 +15,7 @@ fileprivate enum FolderSection: CaseIterable {
 final class WishFolderViewController: UIViewController {
     
     private let repository: BaseRepository = RealmRepository()
+    private lazy var folderList = Array(repository.fetchAll(WishFolderTable.self))
     
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionviewLayout())
     private var dataSource: UICollectionViewDiffableDataSource<FolderSection, WishFolderTable>?
@@ -74,8 +75,6 @@ final class WishFolderViewController: UIViewController {
  
     private func updateSnapshot() {
         
-        let folderList = Array(repository.fetchAll(WishFolderTable.self))
-        
         var snapshot = NSDiffableDataSourceSnapshot<FolderSection, WishFolderTable>()
         snapshot.appendSections(FolderSection.allCases)
         snapshot.appendItems(folderList, toSection: FolderSection.first)
@@ -88,7 +87,14 @@ extension WishFolderViewController: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
+        let data = folderList[indexPath.item]
+        
         // TODO: 위시리스트로 push
+        let vc = WishListViewController(title: data.name)
+        
+        vc.wishList = Array(data.content)
+        
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
@@ -106,6 +112,7 @@ extension WishFolderViewController {
     private func configureView() {
         view.backgroundColor = .white
         navigationItem.title = "Wish Folder"
+        navigationItem.backButtonTitle = ""
         collectionView.keyboardDismissMode = .onDrag
         collectionView.delegate = self
 
