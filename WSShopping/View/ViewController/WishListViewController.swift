@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-fileprivate enum Section: CaseIterable {
+fileprivate enum WishSection: CaseIterable {
     case first
 }
 
@@ -17,7 +17,7 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
     private let textfield = BaseUITextField()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionviewLayout())
     
-    private var dataSource: UICollectionViewDiffableDataSource<Section, WishProduct>?
+    private var dataSource: UICollectionViewDiffableDataSource<WishSection, WishProduct>?
     
     private var wishList: [WishProduct] = []
 
@@ -80,9 +80,9 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
     
     private func updateSnapshot() {
         
-        var snapshot = NSDiffableDataSourceSnapshot<Section, WishProduct>()
-        snapshot.appendSections(Section.allCases)
-        snapshot.appendItems(wishList, toSection: Section.first)
+        var snapshot = NSDiffableDataSourceSnapshot<WishSection, WishProduct>()
+        snapshot.appendSections(WishSection.allCases)
+        snapshot.appendItems(wishList, toSection: WishSection.first)
         
         dataSource?.apply(snapshot)
     }

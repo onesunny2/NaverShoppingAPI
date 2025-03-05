@@ -6,24 +6,113 @@
 //
 
 import UIKit
+import SnapKit
 
-class WishFolderViewController: UIViewController {
+fileprivate enum FolderSection: CaseIterable {
+    case first
+}
+
+final class WishFolderViewController: UIViewController {
+    
+    private let repository: BaseRepository = RealmRepository()
+    
+    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionviewLayout())
+    private var dataSource: UICollectionViewDiffableDataSource<FolderSection, WishFolderTable>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
+        configureView()
+        configureDataSource()
+        updateSnapshot()
     }
     
+    private func configureDataSource() {
+        
+        let registration = UICollectionView.CellRegistration<UICollectionViewListCell, WishFolderTable> { cell, indexPath, item in
+            
+            var content = UIListContentConfiguration.accompaniedSidebarSubtitleCell()
+            content.text = item.name
+            content.textProperties.color = .systemPink
+            content.textProperties.font = .systemFont(ofSize: 18, weight: .semibold)
+            content.secondaryText = "\(item.content.count)개"
+            content.secondaryTextProperties.color = .black
+            content.secondaryTextProperties.font = .systemFont(ofSize: 15, weight: .medium)
+            content.image = UIImage(systemName: "number")
+            content.imageProperties.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 15)
+            content.imageProperties.tintColor = .black
+            content.prefersSideBySideTextAndSecondaryText = true
+            
+            cell.contentConfiguration = content
+            
+            var backgroundConfig = UIBackgroundConfiguration.listAccompaniedSidebarCell()
+            backgroundConfig.backgroundColor = .systemMint.withAlphaComponent(0.1)
+            backgroundConfig.strokeColor = .darkGray
+            backgroundConfig.strokeWidth = 1
+            
+            cell.backgroundConfiguration = backgroundConfig
+        }
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+        // MARK: DataSource
+        dataSource = UICollectionViewDiffableDataSource(
+            collectionView: collectionView,
+            cellProvider: {
+                collectionView,
+                indexPath,
+                itemIdentifier in
+                
+                let cell = collectionView.dequeueConfiguredReusableCell(
+                    using: registration,
+                    for: indexPath,
+                    item: itemIdentifier
+                )
+                
+                return cell
+            }
+        )
     }
-    */
+ 
+    private func updateSnapshot() {
+        
+        let folderList = Array(repository.fetchAll(WishFolderTable.self))
+        
+        var snapshot = NSDiffableDataSourceSnapshot<FolderSection, WishFolderTable>()
+        snapshot.appendSections(FolderSection.allCases)
+        snapshot.appendItems(folderList, toSection: FolderSection.first)
+        
+        dataSource?.apply(snapshot)
+    }
+}
 
+extension WishFolderViewController: UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        // TODO: 위시리스트로 push
+    }
+}
+
+extension WishFolderViewController {
+    private func collectionviewLayout() -> UICollectionViewLayout {
+        
+        var config = UICollectionLayoutListConfiguration(appearance: .plain)
+        config.showsSeparators = false
+        
+        let layout = UICollectionViewCompositionalLayout.list(using: config)
+        
+        return layout
+    }
+    
+    private func configureView() {
+        view.backgroundColor = .white
+        navigationItem.title = "Wish Folder"
+        collectionView.keyboardDismissMode = .onDrag
+        collectionView.delegate = self
+
+        view.addSubview(collectionView)
+        collectionView.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.horizontalEdges.bottom.equalTo(view.safeAreaLayoutGuide).inset(20)
+        }
+    }
 }
