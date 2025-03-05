@@ -15,7 +15,7 @@ final class WishFolderTable: Object {
     
     @Persisted var content: List<WishListTable>
     
-    convenience init(id: ObjectId, name: String) {
+    convenience init(name: String) {
         self.init()
         
         self.id = id
@@ -23,7 +23,7 @@ final class WishFolderTable: Object {
     }
 }
 
-enum FolderName: String {
+enum FolderName: String, CaseIterable {
     case 화장품
     case 맛집
     case 버킷리스트

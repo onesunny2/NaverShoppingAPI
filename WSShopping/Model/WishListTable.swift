@@ -16,7 +16,7 @@ final class WishListTable: Object {
     
     @Persisted(originProperty: "content") var folder: LinkingObjects<WishFolderTable>
     
-    convenience init(id: ObjectId, wishName: String, regDate: Date) {
+    convenience init(wishName: String, regDate: Date) {
         self.init()
         
         self.id = id
