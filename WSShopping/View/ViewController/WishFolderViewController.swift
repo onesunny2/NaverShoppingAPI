@@ -90,9 +90,12 @@ extension WishFolderViewController: UICollectionViewDelegate {
         let data = folderList[indexPath.item]
         
         // TODO: 위시리스트로 push
-        let vc = WishListViewController(title: data.name)
+        let vc = WishListViewController(folderData: data)
         
         vc.wishList = Array(data.content)
+        vc.popVC = { [weak self] in
+            self?.collectionView.reloadData()
+        }
         
         navigationController?.pushViewController(vc, animated: true)
     }

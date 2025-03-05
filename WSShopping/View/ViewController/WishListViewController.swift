@@ -14,16 +14,20 @@ fileprivate enum WishSection: CaseIterable {
 
 final class WishListViewController: UIViewController, UITextFieldDelegate {
     
+    private let repository: BaseRepository = RealmRepository()
+    
     private let textfield = BaseUITextField()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionviewLayout())
     
     private var dataSource: UICollectionViewDiffableDataSource<WishSection, WishListTable>?
     
     var wishList: [WishListTable] = []
-    var navigationTitle: String
+    var folderData: WishFolderTable  // 네비게이션 타이틀, id 전달 위함
     
-    init(title: String) {
-        self.navigationTitle = title
+    var popVC: (() -> ())?
+    
+    init(folderData: WishFolderTable) {
+        self.folderData = folderData
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -41,6 +45,12 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
         updateSnapshot()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        popVC?()
+    }
+    
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesEnded(touches, with: event)
         view.endEditing(true)
@@ -53,6 +63,11 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
         let product = WishListTable(wishName: keyword, regDate: Date())
         wishList.append(product)
         updateSnapshot()
+        
+        let folder = repository.fetchAll(WishFolderTable.self)
+            .filter { $0.id == self.folderData.id }.first!
+        
+        repository.createItemInFolder(product, folder: folder)
         
         textfield.text = ""
     }
@@ -68,7 +83,7 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
             content.secondaryText = item.regDate.dateToString()
             content.secondaryTextProperties.color = .darkGray
             content.secondaryTextProperties.font = .systemFont(ofSize: 13, weight: .medium)
-            content.image = UIImage(systemName: "checkmark.square")
+            content.image = UIImage(systemName: "square")
             content.imageProperties.tintColor = .systemPink
             content.prefersSideBySideTextAndSecondaryText = true
             
@@ -124,7 +139,7 @@ extension WishListViewController {
     
     private func configureView() {
         view.backgroundColor = .white
-        navigationItem.title = navigationTitle
+        navigationItem.title = folderData.name
         collectionView.keyboardDismissMode = .onDrag
         textfield.delegate = self
         collectionView.delegate = self
