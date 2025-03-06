@@ -119,7 +119,11 @@ extension WishListViewController: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
+        let deletedItem = wishList[indexPath.item]
         wishList.remove(at: indexPath.item)
+        
+        repository.deleteItem(deletedItem)
+        
         updateSnapshot()
     }
 }
