@@ -12,7 +12,7 @@ final class BaseUITextField: UITextField {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        let placeHolder = "사고싶은 물건을 입력해보세요!"
+        let placeHolder = "항목을 입력해보세요!"
         
         self.attributedPlaceholder = NSAttributedString(string: placeHolder, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14, weight: .medium), NSAttributedString.Key.foregroundColor: UIColor.lightGray])
         self.keyboardType = .default

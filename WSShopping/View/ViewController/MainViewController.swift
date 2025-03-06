@@ -15,6 +15,8 @@ final class MainViewController: UIViewController {
     private let viewModel = MainViewModel()
     private let disposeBag = DisposeBag()
     
+    private let repository: BaseRepository = RealmRepository()
+    
     private let searchbar = UISearchBar()
     private let defaultImage = UIImageView()
     private let defaultLabel = UILabel()
@@ -24,7 +26,17 @@ final class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print(RealmManager.shared.checkDefaultRealmLocation())
+        print(repository.getFileURL())
+      
+        let data = repository.fetchAll(WishFolderTable.self)
+        // MARK: 앱 빌드 시 Folder data 없을 시 create 하도록 설정
+        if data.isEmpty {
+            FolderName.allCases.forEach {
+                repository.createItem(WishFolderTable(name: $0.rawValue))
+            }
+        } else {
+            print("저장된 folderName 있음")
+        }
         
         configHierarchy()
         configLayout()
@@ -78,7 +90,7 @@ final class MainViewController: UIViewController {
         
         rightBarItem.rx.tap
             .bind(with: self) { this, _ in
-                let vc = WishListViewController()
+                let vc = WishFolderViewController()
                 this.navigationController?.pushViewController(vc, animated: true)
             }
             .disposed(by: disposeBag)

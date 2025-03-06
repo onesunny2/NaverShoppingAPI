@@ -8,25 +8,47 @@
 import UIKit
 import SnapKit
 
-fileprivate enum Section: CaseIterable {
+fileprivate enum WishSection: CaseIterable {
     case first
 }
 
 final class WishListViewController: UIViewController, UITextFieldDelegate {
     
+    private let repository: BaseRepository = RealmRepository()
+    
     private let textfield = BaseUITextField()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionviewLayout())
     
-    private var dataSource: UICollectionViewDiffableDataSource<Section, WishProduct>?
+    private var dataSource: UICollectionViewDiffableDataSource<WishSection, WishListTable>?
     
-    private var wishList: [WishProduct] = []
-
+    var wishList: [WishListTable] = []
+    var folderData: WishFolderTable  // 네비게이션 타이틀, id 전달 위함
+    
+    var popVC: (() -> ())?
+    
+    init(folderData: WishFolderTable) {
+        self.folderData = folderData
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         configureView()
         configureDataSource()
         updateSnapshot()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        popVC?()
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -38,25 +60,30 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
         
         guard let keyword = textfield.text else { return }
         
-        let product = WishProduct(name: keyword)
+        let product = WishListTable(wishName: keyword, regDate: Date())
         wishList.append(product)
         updateSnapshot()
+        
+        let folder = repository.fetchAll(WishFolderTable.self)
+            .filter { $0.id == self.folderData.id }.first!
+        
+        repository.createItemInFolder(product, folder: folder)
         
         textfield.text = ""
     }
  
     private func configureDataSource() {
         
-        let registration = UICollectionView.CellRegistration<UICollectionViewListCell, WishProduct> { cell, indexPath, item in
+        let registration = UICollectionView.CellRegistration<UICollectionViewListCell, WishListTable> { cell, indexPath, item in
             
             var content = UIListContentConfiguration.accompaniedSidebarSubtitleCell()
-            content.text = item.name
+            content.text = item.wishName
             content.textProperties.color = .label
             content.textProperties.font = .systemFont(ofSize: 16, weight: .semibold)
-            content.secondaryText = item.date.dateToString()
+            content.secondaryText = item.regDate.dateToString()
             content.secondaryTextProperties.color = .darkGray
             content.secondaryTextProperties.font = .systemFont(ofSize: 13, weight: .medium)
-            content.image = UIImage(systemName: "checkmark.square")
+            content.image = UIImage(systemName: "square")
             content.imageProperties.tintColor = .systemPink
             content.prefersSideBySideTextAndSecondaryText = true
             
@@ -80,9 +107,9 @@ final class WishListViewController: UIViewController, UITextFieldDelegate {
     
     private func updateSnapshot() {
         
-        var snapshot = NSDiffableDataSourceSnapshot<Section, WishProduct>()
-        snapshot.appendSections(Section.allCases)
-        snapshot.appendItems(wishList, toSection: Section.first)
+        var snapshot = NSDiffableDataSourceSnapshot<WishSection, WishListTable>()
+        snapshot.appendSections(WishSection.allCases)
+        snapshot.appendItems(wishList, toSection: WishSection.first)
         
         dataSource?.apply(snapshot)
     }
@@ -92,7 +119,11 @@ extension WishListViewController: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
+        let deletedItem = wishList[indexPath.item]
         wishList.remove(at: indexPath.item)
+        
+        repository.deleteItem(deletedItem)
+        
         updateSnapshot()
     }
 }
@@ -112,7 +143,7 @@ extension WishListViewController {
     
     private func configureView() {
         view.backgroundColor = .white
-        navigationItem.title = "위시리스트"
+        navigationItem.title = folderData.name
         collectionView.keyboardDismissMode = .onDrag
         textfield.delegate = self
         collectionView.delegate = self
